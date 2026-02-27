@@ -10,6 +10,8 @@ const {
   unlockedGroups,
   timelineEntries,
   completedTasks,
+  usabilityQuestions,
+  usabilityResponses,
   toggleTask,
   restartSimulation,
   initializeSimulation,
@@ -55,11 +57,39 @@ function exportAdminDataToExcel() {
     taskDone: item.taskId ? (item.taskDone ? 'Yes' : 'No') : 'N/A'
   }))
 
+  const answeredCount = usabilityQuestions.filter((question) => {
+    const score = usabilityResponses.value[question.id]
+    return Number.isInteger(score) && score >= 1 && score <= 5
+  }).length
+
+  const usabilityRows = usabilityQuestions.map((question, index) => {
+    const score = usabilityResponses.value[question.id]
+    return {
+      item: index + 1,
+      questionId: question.id,
+      question: question.text,
+      likertScore: Number.isInteger(score) ? score : 'N/A',
+      answered: Number.isInteger(score) ? 'Yes' : 'No'
+    }
+  })
+
+  const usabilitySummaryRows = [
+    {
+      answeredItems: answeredCount,
+      totalItems: usabilityQuestions.length,
+      completionPercent: `${Math.round((answeredCount / usabilityQuestions.length) * 100)}%`
+    }
+  ]
+
   const groupSheet = XLSX.utils.json_to_sheet(groupOrderRows)
   const statusSheet = XLSX.utils.json_to_sheet(emailStatusRows)
+  const usabilitySheet = XLSX.utils.json_to_sheet(usabilityRows)
+  const usabilitySummarySheet = XLSX.utils.json_to_sheet(usabilitySummaryRows)
 
   XLSX.utils.book_append_sheet(workbook, groupSheet, 'Group Order')
   XLSX.utils.book_append_sheet(workbook, statusSheet, 'Email Status')
+  XLSX.utils.book_append_sheet(workbook, usabilitySheet, 'Usability Questionnaire')
+  XLSX.utils.book_append_sheet(workbook, usabilitySummarySheet, 'Usability Summary')
 
   const cleanedName = String(exportFileName.value || '')
     .trim()

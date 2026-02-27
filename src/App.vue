@@ -34,13 +34,10 @@ onMounted(() => {
       <!-- <p>Intro + 3 groups x 3 emails, unlocked by completed tasks.</p> -->
     </header>
 
-    <nav class="tabs route-tabs">
-      <!-- <RouterLink to="/" class="tab-link" active-class="active" exact-active-class="active">
-        Inbox & Send
-      </RouterLink> -->
-      <!-- <RouterLink to="/admin" class="tab-link" active-class="active">
-        Admin
-      </RouterLink> -->
+    <nav class="route-nav">
+      <!-- <RouterLink to="/" exact-active-class="router-link-active">Inbox</RouterLink>
+      <RouterLink to="/admin" exact-active-class="router-link-active">Admin</RouterLink>
+      <RouterLink to="/usability" exact-active-class="router-link-active">Usability</RouterLink> -->
     </nav>
 
     <RouterView />

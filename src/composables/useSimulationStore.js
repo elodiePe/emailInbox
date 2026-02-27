@@ -13,6 +13,50 @@ const incomingEmails = ref([])
 const sentEmails = ref([])
 const completedTasks = ref({})
 const composeForm = ref({ to: '', subject: '', body: '' })
+const usabilityResponses = ref({})
+
+const usabilityQuestions = [
+  {
+    id: 'q1',
+    text: 'It was easy to access and copy my password when I needed it.'
+  },
+  {
+    id: 'q2',
+    text: 'The process of retrieving my password felt fast and efficient.'
+  },
+  {
+    id: 'q3',
+    text: 'I never felt confused about what I had to do to see my password.'
+  },
+  {
+    id: 'q4',
+    text: 'The physical actions required (writing, tapping...) felt natural.'
+  },
+  {
+    id: 'q5',
+    text: "I am confident that I won't accidentally show or copy a password."
+  },
+  {
+    id: 'q6',
+    text: 'I feel my password is safe from cyber-attacks.'
+  },
+  {
+    id: 'q7',
+    text: 'I feel in total control of when and how my sensitive data is accessed.'
+  },
+  {
+    id: 'q8',
+    text: 'I felt every time a password was revealed, it was because of my explicit intent.'
+  },
+  {
+    id: 'q9',
+    text: "The app effectively prevents sharing a password I didn't want to share"
+  },
+  {
+    id: 'q10',
+    text: "If I handed in my unlocked phone to a stranger, I would feel calm about my passwords' safety."
+  }
+]
 
 const simulationStartedAt = Date.now()
 const introActivatedAt = ref(simulationStartedAt)
@@ -137,11 +181,26 @@ function normalizeIncomingEmail(email) {
   }
 }
 
+function normalizeUsabilityResponses(value) {
+  if (!value || typeof value !== 'object') return {}
+
+  const normalized = {}
+  Object.entries(value).forEach(([questionId, score]) => {
+    const numericScore = Number(score)
+    if (Number.isInteger(numericScore) && numericScore >= 1 && numericScore <= 5) {
+      normalized[questionId] = numericScore
+    }
+  })
+
+  return normalized
+}
+
 function applyStatePayload(parsed) {
   selectedEmailId.value = parsed.selectedEmailId || null
   incomingEmails.value = Array.isArray(parsed.incomingEmails) ? parsed.incomingEmails.map(normalizeIncomingEmail) : []
   sentEmails.value = Array.isArray(parsed.sentEmails) ? parsed.sentEmails : []
   completedTasks.value = parsed.completedTasks && typeof parsed.completedTasks === 'object' ? parsed.completedTasks : {}
+  usabilityResponses.value = normalizeUsabilityResponses(parsed.usabilityResponses)
   composeForm.value = parsed.composeForm && typeof parsed.composeForm === 'object'
     ? {
         to: parsed.composeForm.to || '',
@@ -177,6 +236,7 @@ function buildStatePayload(revision) {
     incomingEmails: incomingEmails.value,
     sentEmails: sentEmails.value,
     completedTasks: completedTasks.value,
+    usabilityResponses: usabilityResponses.value,
     composeForm: composeForm.value,
     introActivatedAt: introActivatedAt.value,
     groupActivationTime: groupActivationTime.value,
@@ -369,6 +429,7 @@ function resetInMemoryState() {
   incomingEmails.value = []
   sentEmails.value = []
   completedTasks.value = {}
+  usabilityResponses.value = {}
   composeForm.value = { to: '', subject: '', body: '' }
   introActivatedAt.value = simulationStartedAt
   groupActivationTime.value = {}
@@ -402,6 +463,7 @@ function restartSimulation() {
   incomingEmails.value = []
   sentEmails.value = []
   completedTasks.value = {}
+  usabilityResponses.value = {}
   composeForm.value = {
     to: '',
     subject: '',
@@ -415,6 +477,18 @@ function restartSimulation() {
 
   releaseNextGroupIfReady()
   tickSimulation()
+  saveState()
+}
+
+function setUsabilityResponse(questionId, score) {
+  const normalizedScore = Number(score)
+  if (!Number.isInteger(normalizedScore) || normalizedScore < 1 || normalizedScore > 5) return
+  if (!usabilityQuestions.some((question) => question.id === questionId)) return
+
+  usabilityResponses.value = {
+    ...usabilityResponses.value,
+    [questionId]: normalizedScore
+  }
   saveState()
 }
 
@@ -491,7 +565,10 @@ function useSimulationStore() {
     composeForm,
     timelineEntries,
     completedTasks,
+    usabilityQuestions,
+    usabilityResponses,
     toggleTask,
+    setUsabilityResponse,
     selectEmail,
     toggleEmailUnsafe,
     sendEmail,

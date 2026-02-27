@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import AdminView from './views/AdminView.vue'
 import InboxView from './views/InboxView.vue'
 import InboxEmailView from './views/InboxEmailView.vue'
+import UsabilityView from './views/UsabilityView.vue'
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -20,6 +21,11 @@ const router = createRouter({
       path: '/admin',
       name: 'admin',
       component: AdminView
+    },
+    {
+      path: '/usability',
+      name: 'usability',
+      component: UsabilityView
     }
   ]
 })
