@@ -1,0 +1,118 @@
+{
+  "introduction": {
+    "id": "intro",
+    "label": "Introduction",
+    "emails": [
+      {
+        "id": "intro-1",
+        "from": "simulation@company.test",
+        "subject": "Welcome to the simulation",
+        "body": "You will receive email tasks in waves. Read each message and complete its task to unlock the next wave.",
+        "delaySeconds": 2,
+        "taskId": "task-intro-read",
+        "taskLabel": "Confirm simulation rules are understood"
+      }
+    ]
+  },
+  "groups": [
+    {
+      "id": "group-1",
+      "label": "Group 1",
+      "emails": [
+        {
+          "id": "g1-1",
+          "from": "hr@company.test",
+          "subject": "Employee file request",
+          "body": "Please verify employee profile 1024 and confirm it is complete.",
+          "delaySeconds": 10,
+          "taskId": "task-g1-verify-profile",
+          "taskLabel": "Verify employee profile 1024"
+        },
+        {
+          "id": "g1-2",
+          "from": "it-support@company.test",
+          "subject": "Access permission review",
+          "body": "Review and validate requested mailbox permissions for Team Blue.",
+          "delaySeconds": 25,
+          "taskId": "task-g1-review-access",
+          "taskLabel": "Review Team Blue mailbox permissions"
+        },
+        {
+          "id": "g1-3",
+          "from": "manager@company.test",
+          "subject": "Daily summary",
+          "body": "Send your short summary once Group 1 tasks are complete.",
+          "delaySeconds": 40,
+          "taskId": "task-g1-send-summary",
+          "taskLabel": "Prepare and send Group 1 summary"
+        }
+      ]
+    },
+    {
+      "id": "group-2",
+      "label": "Group 2",
+      "emails": [
+        {
+          "id": "g2-1",
+          "from": "finance@company.test",
+          "subject": "Invoice validation",
+          "body": "Check invoice INV-204 and report any mismatch.",
+          "delaySeconds": 12,
+          "taskId": "task-g2-check-invoice",
+          "taskLabel": "Validate invoice INV-204"
+        },
+        {
+          "id": "g2-2",
+          "from": "operations@company.test",
+          "subject": "Shift handover",
+          "body": "Review handover notes and acknowledge receipt.",
+          "delaySeconds": 28,
+          "taskId": "task-g2-handover",
+          "taskLabel": "Acknowledge shift handover notes"
+        },
+        {
+          "id": "g2-3",
+          "from": "security@company.test",
+          "subject": "Alert triage",
+          "body": "Triage alert SEC-77 and classify impact.",
+          "delaySeconds": 45,
+          "taskId": "task-g2-triage-alert",
+          "taskLabel": "Classify alert SEC-77 impact"
+        }
+      ]
+    },
+    {
+      "id": "group-3",
+      "label": "Group 3",
+      "emails": [
+        {
+          "id": "g3-1",
+          "from": "qa@company.test",
+          "subject": "Final checklist",
+          "body": "Complete the end-of-simulation quality checklist.",
+          "delaySeconds": 10,
+          "taskId": "task-g3-final-checklist",
+          "taskLabel": "Complete final quality checklist"
+        },
+        {
+          "id": "g3-2",
+          "from": "lead@company.test",
+          "subject": "Escalation review",
+          "body": "Review two escalated cases and record your decisions.",
+          "delaySeconds": 24,
+          "taskId": "task-g3-escalation-review",
+          "taskLabel": "Review 2 escalated cases"
+        },
+        {
+          "id": "g3-3",
+          "from": "simulation@company.test",
+          "subject": "Simulation closeout",
+          "body": "Send closeout confirmation when all tasks are done.",
+          "delaySeconds": 40,
+          "taskId": "task-g3-closeout",
+          "taskLabel": "Send simulation closeout confirmation"
+        }
+      ]
+    }
+  ]
+}
