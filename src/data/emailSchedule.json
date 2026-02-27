@@ -97,7 +97,7 @@
         {
           "id": "g3-2",
           "from": "lead@company.test",
-          "subject": "Escalation review",
+          "subject": "Escalation try",
           "body": "Review two escalated cases and record your decisions.",
           "delaySeconds": 24,
           "taskId": "task-g3-escalation-review",
