@@ -15,7 +15,7 @@ const {
   completedTasks,
   toggleTask,
   selectEmail,
-  toggleEmailDangerous,
+  toggleEmailUnsafe,
   sendEmail,
   initializeSimulation
 } = useSimulationStore()
@@ -55,8 +55,8 @@ function openEmail(emailId) {
   router.push(`/inbox/${encodeURIComponent(emailId)}`)
 }
 
-function toggleDangerousFromList(email) {
-  toggleEmailDangerous(email.instanceId, !email.isDangerous)
+function toggleUnsafeFromList(email) {
+  toggleEmailUnsafe(email.instanceId, !email.isUnsafe)
 }
 
 onMounted(() => {
@@ -65,16 +65,16 @@ onMounted(() => {
 </script>
 
 <template>
-  <nav class="tabs">
+  <!-- <nav class="tabs">
     <button :class="{ active: activeTab === 'inbox' }" @click="activeTab = 'inbox'">Inbox ({{ inboxCount }})</button>
     <button :class="{ active: activeTab === 'send' }" @click="activeTab = 'send'">Send Email</button>
-  </nav>
+  </nav> -->
 
   <main v-if="activeTab === 'inbox'" class="mail-layout">
     <section class="panel mailbox-sidebar">
       <button class="compose-cta" @click="activeTab = 'send'">+ Compose</button>
-
-      <h2>Folders</h2>
+<!-- 
+      <h2>Folders</h2> -->
       <ul class="folder-list">
         <li class="active">Inbox <span>{{ inboxCount }}</span></li>
 <li>Unread <span>{{ unreadCount }}</span></li>
@@ -118,17 +118,17 @@ onMounted(() => {
               <p class="meta">{{ email.receivedAt }}</p>
               <button
                 type="button"
-                class="danger-quick-btn"
-                :class="{ active: email.isDangerous }"
-                @click.stop="toggleDangerousFromList(email)"
+                class="unsafe-quick-btn"
+                :class="{ active: email.isUnsafe }"
+                @click.stop="toggleUnsafeFromList(email)"
               >
-                {{ email.isDangerous ? 'Unsafe' : 'Mark Unsafe' }}
+                {{ email.isUnsafe ? 'Unsafe' : 'Mark Unsafe' }}
               </button>
             </div>
           </div>
           <p class="subject">
             {{ email.subject }}
-            <span v-if="email.isDangerous" class="mail-flag-danger">Dangerous</span>
+            <span v-if="email.isUnsafe" class="mail-flag-unsafe">Unsafe</span>
           </p>
           <p class="snippet">{{ getPreview(email.body) }}</p>
         </li>

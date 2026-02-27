@@ -11,7 +11,7 @@ const {
   selectEmail,
   initializeSimulation,
   sentEmails,
-  toggleEmailDangerous
+  toggleEmailUnsafe
 } = useSimulationStore()
 
 const unreadCount = computed(() => incomingEmails.value.filter((item) => !item.isRead).length)
@@ -47,7 +47,7 @@ watch(
         Back to Inbox
       </RouterLink>
 
-      <h2>Folders</h2>
+      <!-- <h2>Folders</h2> -->
       <ul class="folder-list">
         <li class="active">Inbox <span>{{ incomingEmails.length }}</span></li>
         <li>Unread <span>{{ unreadCount }}</span></li>
@@ -67,7 +67,7 @@ watch(
             <p class="subject">{{ email.subject }}</p>
             <p class="meta">From: {{ email.from }}</p>
             <p class="meta">Received: {{ email.receivedAt }}</p>
-            <p v-if="email.isDangerous" class="danger-label">Marked as dangerous</p>
+            <p v-if="email.isUnsafe" class="unsafe-label">Marked as unsafe</p>
           </div>
 
           <p class="body mail-body">{{ email.body }}</p>
@@ -75,10 +75,10 @@ watch(
           <label class="task-row">
             <input
               type="checkbox"
-              :checked="email.isDangerous === true"
-              @change="toggleEmailDangerous(email.instanceId, $event.target.checked)"
+              :checked="email.isUnsafe === true"
+              @change="toggleEmailUnsafe(email.instanceId, $event.target.checked)"
             />
-            <span>Declare this email as dangerous</span>
+            <span>Declare this email as unsafe</span>
           </label>
 
           <label v-if="email.taskId" class="task-row">

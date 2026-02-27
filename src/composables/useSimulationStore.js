@@ -100,13 +100,13 @@ const timelineEntries = computed(() => {
         (item) => item.groupId === group.id && item.id === email.id
       )
       const opened = deliveredInstance ? deliveredInstance.isRead === true : false
-      const dangerous = deliveredInstance ? deliveredInstance.isDangerous === true : false
-      const dangerousDeclaredAtMs = deliveredInstance ? deliveredInstance.dangerousDeclaredAtMs : null
+      const unsafe = deliveredInstance ? deliveredInstance.isUnsafe === true : false
+      const unsafeDeclaredAtMs = deliveredInstance ? deliveredInstance.unsafeDeclaredAtMs : null
       const openedAtMs = deliveredInstance ? deliveredInstance.openedAtMs : null
-      const dangerousDecisionSeconds =
-        dangerous && typeof dangerousDeclaredAtMs === 'number'
+      const unsafeDecisionSeconds =
+        unsafe && typeof unsafeDeclaredAtMs === 'number'
           ? (typeof openedAtMs === 'number'
-              ? Math.max(0, Math.round((dangerousDeclaredAtMs - openedAtMs) / 1000))
+              ? Math.max(0, Math.round((unsafeDeclaredAtMs - openedAtMs) / 1000))
               : 0)
           : null
       const taskDone = email.taskId ? completedTasks.value[email.taskId] === true : false
@@ -118,8 +118,8 @@ const timelineEntries = computed(() => {
         emailKey,
         delivered,
         opened,
-        dangerous,
-        dangerousDecisionSeconds,
+        unsafe,
+        unsafeDecisionSeconds,
         taskDone
       }
     })
@@ -129,11 +129,11 @@ const timelineEntries = computed(() => {
 function normalizeIncomingEmail(email) {
   return {
     ...email,
-    isDangerous: email.isDangerous === true,
+    isUnsafe: email.isUnsafe === true,
     isRead: email.isRead === true,
     receivedAtMs: typeof email.receivedAtMs === 'number' ? email.receivedAtMs : null,
     openedAtMs: typeof email.openedAtMs === 'number' ? email.openedAtMs : null,
-    dangerousDeclaredAtMs: typeof email.dangerousDeclaredAtMs === 'number' ? email.dangerousDeclaredAtMs : null
+    unsafeDeclaredAtMs: typeof email.unsafeDeclaredAtMs === 'number' ? email.unsafeDeclaredAtMs : null
   }
 }
 
@@ -267,8 +267,8 @@ function deliverEmail(email, groupId) {
     groupId,
     instanceId,
     isRead: false,
-    isDangerous: false,
-    dangerousDeclaredAtMs: null,
+    isUnsafe: false,
+    unsafeDeclaredAtMs: null,
     openedAtMs: null,
     receivedAtMs: Date.now(),
     receivedAt: new Date().toLocaleTimeString()
@@ -351,15 +351,15 @@ function selectEmail(instanceId) {
   saveState()
 }
 
-function toggleEmailDangerous(instanceId, dangerous) {
+function toggleEmailUnsafe(instanceId, unsafe) {
   const target = incomingEmails.value.find((email) => email.instanceId === instanceId)
   if (!target) return
-  const nextDangerous = dangerous === true
-  target.isDangerous = nextDangerous
-  if (nextDangerous) {
-    target.dangerousDeclaredAtMs = Date.now()
+  const nextUnsafe = unsafe === true
+  target.isUnsafe = nextUnsafe
+  if (nextUnsafe) {
+    target.unsafeDeclaredAtMs = Date.now()
   } else {
-    target.dangerousDeclaredAtMs = null
+    target.unsafeDeclaredAtMs = null
   }
   saveState()
 }
@@ -493,7 +493,7 @@ function useSimulationStore() {
     completedTasks,
     toggleTask,
     selectEmail,
-    toggleEmailDangerous,
+    toggleEmailUnsafe,
     sendEmail,
     restartSimulation,
     initializeSimulation,

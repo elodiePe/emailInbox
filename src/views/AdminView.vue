@@ -16,12 +16,12 @@ const {
   moveGroup
 } = useSimulationStore()
 
-const showOnlyDangerous = ref(false)
+const showOnlyUnsafe = ref(false)
 const exportFileName = ref('simulation-export')
 
 const displayedTimelineEntries = computed(() => {
-  if (!showOnlyDangerous.value) return timelineEntries.value
-  return timelineEntries.value.filter((item) => item.dangerous)
+  if (!showOnlyUnsafe.value) return timelineEntries.value
+  return timelineEntries.value.filter((item) => item.unsafe)
 })
 
 function formatSeconds(value) {
@@ -48,9 +48,9 @@ function exportAdminDataToExcel() {
     from: item.from,
     sent: item.delivered ? 'Yes' : 'No',
     opened: item.opened ? 'Yes' : 'No',
-    dangerous: item.dangerous ? 'Yes' : 'No',
-    dangerousDecisionFromOpenSeconds: typeof item.dangerousDecisionSeconds === 'number' ? item.dangerousDecisionSeconds : 'N/A',
-    dangerousDecisionFromOpenDuration: formatSeconds(item.dangerousDecisionSeconds),
+    unsafe: item.unsafe ? 'Yes' : 'No',
+    unsafeDecisionFromOpenSeconds: typeof item.unsafeDecisionSeconds === 'number' ? item.unsafeDecisionSeconds : 'N/A',
+    unsafeDecisionFromOpenDuration: formatSeconds(item.unsafeDecisionSeconds),
     hasTask: item.taskId ? 'Yes' : 'No',
     taskDone: item.taskId ? (item.taskDone ? 'Yes' : 'No') : 'N/A'
   }))
@@ -81,9 +81,9 @@ onMounted(() => {
     <section class="panel admin-timeline-panel">
       <div class="admin-timeline-head">
         <h2>Simulation Timeline</h2>
-        <label class="danger-filter-toggle">
-          <input type="checkbox" v-model="showOnlyDangerous" />
-          <span>Only dangerous</span>
+        <label class="unsafe-filter-toggle">
+          <input type="checkbox" v-model="showOnlyUnsafe" />
+          <span>Only unsafe</span>
         </label>
       </div>
       <ul class="timeline-list">
@@ -92,7 +92,7 @@ onMounted(() => {
           :key="item.emailKey"
           class="timeline-item"
           :class="{
-            'is-dangerous': item.dangerous,
+            'is-unsafe': item.unsafe,
             'is-task-done': item.taskId && item.taskDone,
             'is-opened': item.opened && !(item.taskId && item.taskDone),
             'is-sent': item.delivered && !item.opened && !(item.taskId && item.taskDone),
@@ -108,11 +108,11 @@ onMounted(() => {
             <span class="timeline-badge" :class="item.opened ? 'opened-done' : 'opened-pending'">
               Opened: {{ item.opened ? 'Yes' : 'No' }}
             </span>
-            <span class="timeline-badge" :class="item.dangerous ? 'danger-done' : 'danger-pending'">
-              Dangerous: {{ item.dangerous ? 'Yes' : 'No' }}
+            <span class="timeline-badge" :class="item.unsafe ? 'unsafe-done' : 'unsafe-pending'">
+              Unsafe: {{ item.unsafe ? 'Yes' : 'No' }}
             </span>
-            <span class="timeline-badge" :class="item.dangerous ? 'danger-time' : 'danger-time-pending'">
-              Time from open: {{ formatSeconds(item.dangerousDecisionSeconds) }}
+            <span class="timeline-badge" :class="item.unsafe ? 'unsafe-time' : 'unsafe-time-pending'">
+              Time from open: {{ formatSeconds(item.unsafeDecisionSeconds) }}
             </span>
             <span v-if="item.taskId" class="timeline-badge" :class="item.taskDone ? 'task-done' : 'task-pending'">
               Task: {{ item.taskDone ? 'Done' : 'Pending' }}
