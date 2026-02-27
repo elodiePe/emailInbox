@@ -33,6 +33,16 @@ body {
   color: #4b5563;
 }
 
+.sync-warning {
+  margin-top: 8px;
+  color: #991b1b !important;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+}
+
 .session-switcher {
   margin-top: 10px;
   display: flex;

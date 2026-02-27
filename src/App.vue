@@ -3,7 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 import { useSimulationStore } from './composables/useSimulationStore'
 
-const { initializeSimulation, currentSessionId, switchSession } = useSimulationStore()
+const { initializeSimulation, currentSessionId, switchSession, syncStatus, syncMessage } = useSimulationStore()
 const sessionInput = ref('')
 
 function joinSession() {
@@ -23,6 +23,7 @@ onMounted(() => {
   <div class="app-shell">
     <header class="topbar">
       <h1>Email Inbox</h1>
+      <p v-if="syncStatus === 'error'" class="sync-warning">{{ syncMessage }}</p>
       <div class="session-switcher">
         <input v-model="sessionInput" type="text" placeholder="Session ID" />
         <button @click="joinSession">Join Session</button>

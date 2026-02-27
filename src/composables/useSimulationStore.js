@@ -23,6 +23,8 @@ const currentSessionId = ref(DEFAULT_ROOM_KEY)
 
 const initialized = ref(false)
 const localRevision = ref(0)
+const syncStatus = ref(hasSupabaseConfig ? 'connecting' : 'local-only')
+const syncMessage = ref(hasSupabaseConfig ? '' : 'Supabase disabled (missing env). Using local mode.')
 let timerId = null
 let cloudSyncTimerId = null
 
@@ -187,7 +189,7 @@ function buildStatePayload(revision) {
 async function saveRemoteState(payload) {
   if (!hasSupabaseConfig || !supabase) return
 
-  await supabase
+  const { error } = await supabase
     .from(CLOUD_TABLE)
     .upsert({
       id: currentSessionId.value,
@@ -195,6 +197,14 @@ async function saveRemoteState(payload) {
     }, {
       onConflict: 'id'
     })
+
+  if (error) {
+    syncStatus.value = 'error'
+    syncMessage.value = `Sync write failed: ${error.message}`
+  } else {
+    syncStatus.value = 'connected'
+    syncMessage.value = ''
+  }
 }
 
 function saveState(options = { syncRemote: true }) {
@@ -230,7 +240,16 @@ async function pullRemoteStateIfNewer() {
     .eq('id', currentSessionId.value)
     .maybeSingle()
 
-  if (error || !data || !data.payload) return
+  if (error) {
+    syncStatus.value = 'error'
+    syncMessage.value = `Sync read failed: ${error.message}`
+    return
+  }
+
+  syncStatus.value = 'connected'
+  syncMessage.value = ''
+
+  if (!data || !data.payload) return
 
   const remotePayload = data.payload
   const remoteRevision = typeof remotePayload._revision === 'number' ? remotePayload._revision : 0
@@ -456,6 +475,8 @@ async function initializeSimulation() {
 
 function useSimulationStore() {
   return {
+    syncStatus,
+    syncMessage,
     currentSessionId,
     groupOrder,
     orderedGroups,
