@@ -2,10 +2,11 @@ import { computed, ref, watch } from 'vue'
 import schedule from '../data/emailSchedule.json'
 import { hasSupabaseConfig, supabase } from '../lib/supabase'
 
-const STORAGE_KEY = 'email-simulation-state-v1'
+const STORAGE_KEY_PREFIX = 'email-simulation-state'
+const SESSION_STORAGE_KEY = 'email-simulation-active-session'
 const CLOUD_TABLE = 'simulation_state'
 const CLOUD_POLL_MS = 4000
-const ROOM_KEY = import.meta.env.VITE_SIMULATION_ROOM || 'default'
+const DEFAULT_ROOM_KEY = import.meta.env.VITE_SIMULATION_ROOM || 'default'
 
 const selectedEmailId = ref(null)
 const incomingEmails = ref([])
@@ -18,11 +19,24 @@ const introActivatedAt = ref(simulationStartedAt)
 const groupActivationTime = ref({})
 const deliveredEmailIds = ref(new Set())
 const groupSequence = ref(schedule.groups.map((group) => group.id))
+const currentSessionId = ref(DEFAULT_ROOM_KEY)
 
 const initialized = ref(false)
 const localRevision = ref(0)
 let timerId = null
 let cloudSyncTimerId = null
+
+function normalizeSessionId(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-zA-Z0-9_-]/g, '')
+    .toLowerCase()
+}
+
+function getLocalStorageKey(sessionId) {
+  return `${STORAGE_KEY_PREFIX}:${sessionId}`
+}
 
 const orderedGroups = computed(() => {
   const byId = new Map(schedule.groups.map((group) => [group.id, group]))
@@ -176,7 +190,7 @@ async function saveRemoteState(payload) {
   await supabase
     .from(CLOUD_TABLE)
     .upsert({
-      id: ROOM_KEY,
+      id: currentSessionId.value,
       payload
     }, {
       onConflict: 'id'
@@ -187,7 +201,8 @@ function saveState(options = { syncRemote: true }) {
   const revision = Date.now()
   localRevision.value = revision
   const payload = buildStatePayload(revision)
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+  window.localStorage.setItem(getLocalStorageKey(currentSessionId.value), JSON.stringify(payload))
+  window.localStorage.setItem(SESSION_STORAGE_KEY, currentSessionId.value)
 
   if (options.syncRemote !== false) {
     void saveRemoteState(payload)
@@ -195,7 +210,7 @@ function saveState(options = { syncRemote: true }) {
 }
 
 function loadLocalState() {
-  const raw = window.localStorage.getItem(STORAGE_KEY)
+  const raw = window.localStorage.getItem(getLocalStorageKey(currentSessionId.value))
   if (!raw) return
 
   try {
@@ -212,7 +227,7 @@ async function pullRemoteStateIfNewer() {
   const { data, error } = await supabase
     .from(CLOUD_TABLE)
     .select('payload')
-    .eq('id', ROOM_KEY)
+    .eq('id', currentSessionId.value)
     .maybeSingle()
 
   if (error || !data || !data.payload) return
@@ -330,8 +345,40 @@ function toggleEmailDangerous(instanceId, dangerous) {
   saveState()
 }
 
+function resetInMemoryState() {
+  selectedEmailId.value = null
+  incomingEmails.value = []
+  sentEmails.value = []
+  completedTasks.value = {}
+  composeForm.value = { to: '', subject: '', body: '' }
+  introActivatedAt.value = simulationStartedAt
+  groupActivationTime.value = {}
+  deliveredEmailIds.value = new Set()
+  groupSequence.value = schedule.groups.map((group) => group.id)
+  localRevision.value = 0
+}
+
+async function switchSession(sessionId) {
+  const normalized = normalizeSessionId(sessionId)
+  if (!normalized) return false
+
+  if (normalized === currentSessionId.value) return true
+
+  currentSessionId.value = normalized
+  window.localStorage.setItem(SESSION_STORAGE_KEY, normalized)
+
+  resetInMemoryState()
+  loadLocalState()
+  await pullRemoteStateIfNewer()
+
+  releaseNextGroupIfReady()
+  tickSimulation()
+  saveState()
+  return true
+}
+
 function restartSimulation() {
-  window.localStorage.removeItem(STORAGE_KEY)
+  window.localStorage.removeItem(getLocalStorageKey(currentSessionId.value))
   selectedEmailId.value = null
   incomingEmails.value = []
   sentEmails.value = []
@@ -388,6 +435,9 @@ watch(selectedEmailId, (instanceId) => {
 async function initializeSimulation() {
   if (initialized.value) return
 
+  const storedSession = normalizeSessionId(window.localStorage.getItem(SESSION_STORAGE_KEY))
+  currentSessionId.value = storedSession || normalizeSessionId(DEFAULT_ROOM_KEY) || 'default'
+
   loadLocalState()
   await pullRemoteStateIfNewer()
 
@@ -406,6 +456,7 @@ async function initializeSimulation() {
 
 function useSimulationStore() {
   return {
+    currentSessionId,
     groupOrder,
     orderedGroups,
     groupSequence,
@@ -425,7 +476,8 @@ function useSimulationStore() {
     sendEmail,
     restartSimulation,
     initializeSimulation,
-    moveGroup
+    moveGroup,
+    switchSession
   }
 }
 

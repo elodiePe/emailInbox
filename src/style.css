@@ -33,6 +33,29 @@ body {
   color: #4b5563;
 }
 
+.session-switcher {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.session-switcher input {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px 10px;
+  min-width: 200px;
+  font: inherit;
+}
+
+.session-switcher button {
+  border: 1px solid #93c5fd;
+  background: #dbeafe;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
 .route-nav {
   display: flex;
   gap: 8px;
