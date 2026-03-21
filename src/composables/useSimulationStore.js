@@ -14,49 +14,172 @@ const sentEmails = ref([])
 const completedTasks = ref({})
 const composeForm = ref({ to: '', subject: '', body: '' })
 const usabilityResponses = ref({})
+const demographicData = ref({
+  gender: '',
+  age: '',
+  educationLevel: '',
+  itBackground: '',
+  englishLevel: ''
+})
 
 const usabilityQuestions = [
   {
-    id: 'q1',
-    text: 'It was easy to access and copy my password when I needed it.'
+    id: 'sus1',
+    instrument: 'SUS',
+    text: 'I think that I would like to use this system frequently.',
+    minScale: 1,
+    maxScale: 5
   },
   {
-    id: 'q2',
-    text: 'The process of retrieving my password felt fast and efficient.'
+    id: 'sus2',
+    instrument: 'SUS',
+    text: 'I found the system unnecessarily complex.',
+    minScale: 1,
+    maxScale: 5
   },
   {
-    id: 'q3',
-    text: 'I never felt confused about what I had to do to see my password.'
+    id: 'sus3',
+    instrument: 'SUS',
+    text: 'I thought the system was easy to use.',
+    minScale: 1,
+    maxScale: 5
   },
   {
-    id: 'q4',
-    text: 'The physical actions required (writing, tapping...) felt natural.'
+    id: 'sus4',
+    instrument: 'SUS',
+    text: 'I think that I would need the support of a technical person to be able to use this system.',
+    minScale: 1,
+    maxScale: 5
   },
   {
-    id: 'q5',
-    text: "I am confident that I won't accidentally show or copy a password."
+    id: 'sus5',
+    instrument: 'SUS',
+    text: 'I found the various functions in this system were well integrated.',
+    minScale: 1,
+    maxScale: 5
   },
   {
-    id: 'q6',
-    text: 'I feel my password is safe from cyber-attacks.'
+    id: 'sus6',
+    instrument: 'SUS',
+    text: 'I thought there was too much inconsistency in this system.',
+    minScale: 1,
+    maxScale: 5
   },
   {
-    id: 'q7',
-    text: 'I feel in total control of when and how my sensitive data is accessed.'
+    id: 'sus7',
+    instrument: 'SUS',
+    text: 'I would imagine that most people would learn to use this system very quickly.',
+    minScale: 1,
+    maxScale: 5
   },
   {
-    id: 'q8',
-    text: 'I felt every time a password was revealed, it was because of my explicit intent.'
+    id: 'sus8',
+    instrument: 'SUS',
+    text: 'I found the system very cumbersome to use.',
+    minScale: 1,
+    maxScale: 5
   },
   {
-    id: 'q9',
-    text: "The app effectively prevents sharing a password I didn't want to share"
+    id: 'sus9',
+    instrument: 'SUS',
+    text: 'I felt very confident using the system.',
+    minScale: 1,
+    maxScale: 5
   },
   {
-    id: 'q10',
-    text: "If I handed in my unlocked phone to a stranger, I would feel calm about my passwords' safety."
+    id: 'sus10',
+    instrument: 'SUS',
+    text: 'I needed to learn a lot of things before I could get going with this system.',
+    minScale: 1,
+    maxScale: 5
+  },
+  {
+    id: 'ueqs1',
+    instrument: 'UEQ-S',
+    text: 'Obstructive / Supportive',
+    leftLabel: 'Obstructive',
+    rightLabel: 'Supportive',
+    minScale: 1,
+    maxScale: 7
+  },
+  {
+    id: 'ueqs2',
+    instrument: 'UEQ-S',
+    text: 'Complicated / Easy',
+    leftLabel: 'Complicated',
+    rightLabel: 'Easy',
+    minScale: 1,
+    maxScale: 7
+  },
+  {
+    id: 'ueqs3',
+    instrument: 'UEQ-S',
+    text: 'Inefficient / Efficient',
+    leftLabel: 'Inefficient',
+    rightLabel: 'Efficient',
+    minScale: 1,
+    maxScale: 7
+  },
+  {
+    id: 'ueqs4',
+    instrument: 'UEQ-S',
+    text: 'Confusing / Clear',
+    leftLabel: 'Confusing',
+    rightLabel: 'Clear',
+    minScale: 1,
+    maxScale: 7
+  },
+  {
+    id: 'ueqs5',
+    instrument: 'UEQ-S',
+    text: 'Boring / Exciting',
+    leftLabel: 'Boring',
+    rightLabel: 'Exciting',
+    minScale: 1,
+    maxScale: 7
+  },
+  {
+    id: 'ueqs6',
+    instrument: 'UEQ-S',
+    text: 'Not Interesting / Interesting',
+    leftLabel: 'Not Interesting',
+    rightLabel: 'Interesting',
+    minScale: 1,
+    maxScale: 7
+  },
+  {
+    id: 'ueqs7',
+    instrument: 'UEQ-S',
+    text: 'Conventional / Inventive',
+    leftLabel: 'Conventional',
+    rightLabel: 'Inventive',
+    minScale: 1,
+    maxScale: 7
+  },
+  {
+    id: 'ueqs8',
+    instrument: 'UEQ-S',
+    text: 'Usual / Leading Edge',
+    leftLabel: 'Usual',
+    rightLabel: 'Leading Edge',
+    minScale: 1,
+    maxScale: 7
   }
 ]
+
+function getUsabilityQuestionById(questionId) {
+  return usabilityQuestions.find((question) => question.id === questionId) || null
+}
+
+function isValidUsabilityScore(questionId, score) {
+  const question = getUsabilityQuestionById(questionId)
+  if (!question) return false
+
+  const minScale = Number.isInteger(question.minScale) ? question.minScale : 1
+  const maxScale = Number.isInteger(question.maxScale) ? question.maxScale : 5
+
+  return Number.isInteger(score) && score >= minScale && score <= maxScale
+}
 
 const simulationStartedAt = Date.now()
 const introActivatedAt = ref(simulationStartedAt)
@@ -150,7 +273,7 @@ const timelineEntries = computed(() => {
       const unsafeDecisionSeconds =
         unsafe && typeof unsafeDeclaredAtMs === 'number'
           ? (typeof openedAtMs === 'number'
-              ? Math.max(0, Math.round((unsafeDeclaredAtMs - openedAtMs) / 1000))
+              ? Math.max(0, (unsafeDeclaredAtMs - openedAtMs) / 1000)
               : 0)
           : null
       const taskDone = email.taskId ? completedTasks.value[email.taskId] === true : false
@@ -187,12 +310,43 @@ function normalizeUsabilityResponses(value) {
   const normalized = {}
   Object.entries(value).forEach(([questionId, score]) => {
     const numericScore = Number(score)
-    if (Number.isInteger(numericScore) && numericScore >= 1 && numericScore <= 5) {
+    if (isValidUsabilityScore(questionId, numericScore)) {
       normalized[questionId] = numericScore
     }
   })
 
   return normalized
+}
+
+function normalizeDemographicData(value) {
+  const fallback = {
+    gender: '',
+    age: '',
+    educationLevel: '',
+    itBackground: '',
+    englishLevel: ''
+  }
+
+  if (!value || typeof value !== 'object') return fallback
+
+  const allowedGenders = new Set(['Male', 'Female', 'Other'])
+  const allowedEnglishLevels = new Set(['Beginner', 'Intermediate', 'Advanced', 'Native'])
+  const allowedEducationLevels = new Set(['High School', 'Bachelor', 'Master', 'PhD', 'Other'])
+  const allowedItBackgrounds = new Set(['None', 'Basic User', 'Student', 'Professional', 'Other'])
+
+  const normalizedGender = String(value.gender || '').trim()
+  const normalizedAge = String(value.age || '').trim().replace(/[^0-9]/g, '')
+  const normalizedEducationLevel = String(value.educationLevel || '').trim()
+  const normalizedItBackground = String(value.itBackground || '').trim()
+  const normalizedEnglishLevel = String(value.englishLevel || '').trim()
+
+  return {
+    gender: allowedGenders.has(normalizedGender) ? normalizedGender : '',
+    age: normalizedAge,
+    educationLevel: allowedEducationLevels.has(normalizedEducationLevel) ? normalizedEducationLevel : '',
+    itBackground: allowedItBackgrounds.has(normalizedItBackground) ? normalizedItBackground : '',
+    englishLevel: allowedEnglishLevels.has(normalizedEnglishLevel) ? normalizedEnglishLevel : ''
+  }
 }
 
 function applyStatePayload(parsed) {
@@ -201,6 +355,7 @@ function applyStatePayload(parsed) {
   sentEmails.value = Array.isArray(parsed.sentEmails) ? parsed.sentEmails : []
   completedTasks.value = parsed.completedTasks && typeof parsed.completedTasks === 'object' ? parsed.completedTasks : {}
   usabilityResponses.value = normalizeUsabilityResponses(parsed.usabilityResponses)
+  demographicData.value = normalizeDemographicData(parsed.demographicData)
   composeForm.value = parsed.composeForm && typeof parsed.composeForm === 'object'
     ? {
         to: parsed.composeForm.to || '',
@@ -237,6 +392,7 @@ function buildStatePayload(revision) {
     sentEmails: sentEmails.value,
     completedTasks: completedTasks.value,
     usabilityResponses: usabilityResponses.value,
+    demographicData: demographicData.value,
     composeForm: composeForm.value,
     introActivatedAt: introActivatedAt.value,
     groupActivationTime: groupActivationTime.value,
@@ -430,6 +586,13 @@ function resetInMemoryState() {
   sentEmails.value = []
   completedTasks.value = {}
   usabilityResponses.value = {}
+  demographicData.value = {
+    gender: '',
+    age: '',
+    educationLevel: '',
+    itBackground: '',
+    englishLevel: ''
+  }
   composeForm.value = { to: '', subject: '', body: '' }
   introActivatedAt.value = simulationStartedAt
   groupActivationTime.value = {}
@@ -457,13 +620,51 @@ async function switchSession(sessionId) {
   return true
 }
 
-function restartSimulation() {
+async function restartSimulation() {
+  // Clean up password manager study data (but keep passwords)
+  const PM_API_BASE = String(import.meta.env.VITE_PASSWORD_MANAGER_API_URL || 'http://localhost:5000').replace(/\/+$/, '')
+  const PM_FRICTION_LOG_KEY_PREFIX = 'pm-positive-friction-log'
+  const sessionId = currentSessionId.value
+
+  try {
+    // Delete all credential copy events for this session
+    await fetch(`${PM_API_BASE}/api/study/credential-copy?sessionId=${encodeURIComponent(sessionId)}`, {
+      method: 'DELETE'
+    })
+  } catch (err) {
+    console.warn('Failed to delete credential copy events:', err)
+  }
+
+  try {
+    // Delete all password page sessions for this session
+    await fetch(`${PM_API_BASE}/api/study/password-page-session?sessionId=${encodeURIComponent(sessionId)}`, {
+      method: 'DELETE'
+    })
+  } catch (err) {
+    console.warn('Failed to delete password page sessions:', err)
+  }
+
+  // Clear password manager localStorage challenge logs
+  const frictionLogKey = `${PM_FRICTION_LOG_KEY_PREFIX}:${sessionId}`
+  window.localStorage.removeItem(frictionLogKey)
+
+  // Also clear challenge index
+  window.sessionStorage.removeItem('pm.challenge.index')
+
+  // Clear email simulation data
   window.localStorage.removeItem(getLocalStorageKey(currentSessionId.value))
   selectedEmailId.value = null
   incomingEmails.value = []
   sentEmails.value = []
   completedTasks.value = {}
   usabilityResponses.value = {}
+  demographicData.value = {
+    gender: '',
+    age: '',
+    educationLevel: '',
+    itBackground: '',
+    englishLevel: ''
+  }
   composeForm.value = {
     to: '',
     subject: '',
@@ -482,13 +683,50 @@ function restartSimulation() {
 
 function setUsabilityResponse(questionId, score) {
   const normalizedScore = Number(score)
-  if (!Number.isInteger(normalizedScore) || normalizedScore < 1 || normalizedScore > 5) return
-  if (!usabilityQuestions.some((question) => question.id === questionId)) return
+  if (!isValidUsabilityScore(questionId, normalizedScore)) return
 
   usabilityResponses.value = {
     ...usabilityResponses.value,
     [questionId]: normalizedScore
   }
+  saveState()
+}
+
+function setDemographicField(field, value) {
+  const allowedFields = new Set(['gender', 'age', 'educationLevel', 'itBackground', 'englishLevel'])
+  if (!allowedFields.has(field)) return
+
+  let normalizedValue = String(value ?? '').trim()
+
+  if (field === 'age') {
+    normalizedValue = normalizedValue.replace(/[^0-9]/g, '')
+  }
+
+  if (field === 'gender') {
+    const allowedGenders = new Set(['Male', 'Female', 'Other'])
+    if (!allowedGenders.has(normalizedValue)) normalizedValue = ''
+  }
+
+  if (field === 'englishLevel') {
+    const allowedEnglishLevels = new Set(['Beginner', 'Intermediate', 'Advanced', 'Native'])
+    if (!allowedEnglishLevels.has(normalizedValue)) normalizedValue = ''
+  }
+
+  if (field === 'educationLevel') {
+    const allowedEducationLevels = new Set(['High School', 'Bachelor', 'Master', 'PhD', 'Other'])
+    if (!allowedEducationLevels.has(normalizedValue)) normalizedValue = ''
+  }
+
+  if (field === 'itBackground') {
+    const allowedItBackgrounds = new Set(['None', 'Basic User', 'Student', 'Professional', 'Other'])
+    if (!allowedItBackgrounds.has(normalizedValue)) normalizedValue = ''
+  }
+
+  demographicData.value = {
+    ...demographicData.value,
+    [field]: normalizedValue
+  }
+
   saveState()
 }
 
@@ -567,8 +805,10 @@ function useSimulationStore() {
     completedTasks,
     usabilityQuestions,
     usabilityResponses,
+    demographicData,
     toggleTask,
     setUsabilityResponse,
+    setDemographicField,
     selectEmail,
     toggleEmailUnsafe,
     sendEmail,

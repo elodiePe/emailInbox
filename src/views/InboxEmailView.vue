@@ -67,6 +67,9 @@ watch(
             <p class="subject">{{ email.subject }}</p>
             <p class="meta">From: {{ email.from }}</p>
             <p class="meta">Received: {{ email.receivedAt }}</p>
+            <p v-if="email.linkedCredentialWebsite" class="meta">
+              Linked credential: {{ email.linkedCredentialWebsite }}
+            </p>
             <p v-if="email.isUnsafe" class="unsafe-label">Marked as unsafe</p>
           </div>
 
