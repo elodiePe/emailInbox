@@ -3,6 +3,8 @@ import AdminView from './views/AdminView.vue'
 import InboxView from './views/InboxView.vue'
 import InboxEmailView from './views/InboxEmailView.vue'
 import UsabilityView from './views/UsabilityView.vue'
+import LoginView from './views/LoginView.vue'
+import { isAuthenticated } from './composables/useAuth'
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -10,24 +12,54 @@ const router = createRouter({
     {
       path: '/',
       name: 'inbox',
-      component: InboxView
+      component: InboxView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/inbox/:id',
       name: 'inbox-email',
-      component: InboxEmailView
+      component: InboxEmailView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/sent/:id',
+      name: 'sent-email',
+      component: InboxEmailView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/admin',
       name: 'admin',
-      component: AdminView
+      component: AdminView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/usability',
       name: 'usability',
-      component: UsabilityView
+      component: UsabilityView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: LoginView
     }
   ]
+})
+
+router.beforeEach((to) => {
+  if (to.meta.requiresAuth && !isAuthenticated()) {
+    return {
+      path: '/login',
+      query: { redirect: to.fullPath }
+    }
+  }
+
+  if (to.path === '/login' && isAuthenticated()) {
+    return '/'
+  }
+
+  return true
 })
 
 export default router

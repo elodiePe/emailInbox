@@ -121,6 +121,9 @@ body {
   background: #dbeafe;
   border-color: #93c5fd;
 }
+.tab-link:hover {
+  background:#dbeafe;
+}
 
 .inbox-layout {
   display: grid;
@@ -353,8 +356,19 @@ body {
 .status.unlocked {
   color: #065f46;
 }
-
+.tasks-mail-information {
+  
+  background-color: #ddebe7;
+  /* display: flex; */
+  gap: 12px;
+  align-items: center;
+  margin-top: 2rem;
+    border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px;
+}
 .task-row {
+  /* margin-top: 5rem; */
   display: flex;
   gap: 8px;
   align-items: flex-start;
@@ -528,8 +542,8 @@ body {
 }
 
 .mail-body {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  /* background: #f9fafb; */
+  /* border: 1px solid #e5e7eb; */
   border-radius: 10px;
   padding: 12px;
 }

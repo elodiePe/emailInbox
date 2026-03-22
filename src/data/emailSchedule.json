@@ -5,14 +5,16 @@
     "emails": [
       {
         "id": "intro-1",
-        "from": "simulation@company.test",
-        "subject": "Welcome to the simulation",
-        "body": "You will receive email tasks in waves. For each task, open the password manager and copy the credentials for the linked website before completing the step.",
+        "from": "humanresources@adm.com",
+        "accountVerified": true,
+        "subject": "Welcome and account activation",
+        "body": "Hi Taylor, Welcome to APM!<br> We are thrilled to have you join us. <br>To get you started, we have set up your official company credentials. This email serves as your account activation notive and to ensure your worksation and communication are functional.<br> To activate your account, please log in to your Apex portal page (<a href=\"http://admportal.activation.com.local\">admportal.activation.com.local</a>). <br> <br> The HR team",
         "delaySeconds": 2,
-        "linkedCredentialWebsite": "google",
+        "linkedCredentialWebsite": "admportal",
         "taskId": "task-intro-read",
-        "taskLabel": "Confirm simulation rules are understood",
-        "isAttack": false
+        "isAttack": false,
+        "avatar": "APM_ICON.png"
+        
       }
     ]
   },
