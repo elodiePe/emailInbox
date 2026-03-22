@@ -6,6 +6,7 @@ const STORAGE_KEY_PREFIX = 'email-simulation-state'
 const SESSION_STORAGE_KEY = 'email-simulation-active-session'
 const CLOUD_TABLE = 'simulation_state'
 const CLOUD_POLL_MS = 4000
+const EMAIL_AUTO_ADVANCE_MS = 7000
 const DEFAULT_ROOM_KEY = import.meta.env.VITE_SIMULATION_ROOM || 'default'
 
 const selectedEmailId = ref(null)
@@ -495,35 +496,51 @@ function deliverEmail(email, groupId) {
   }
 }
 
+function getLatestDeliveredEmail() {
+  const delivered = incomingEmails.value
+    .sort((a, b) => {
+      const aMs = typeof a.receivedAtMs === 'number' ? a.receivedAtMs : 0
+      const bMs = typeof b.receivedAtMs === 'number' ? b.receivedAtMs : 0
+      return bMs - aMs
+    })
+
+  return delivered[0] || null
+}
+
+function maybeDeliverNextEmailInSequence(now) {
+  const latestDelivered = getLatestDeliveredEmail()
+  if (latestDelivered) {
+    const hasBeenOpened = latestDelivered.isRead === true
+    const receivedAtMs = typeof latestDelivered.receivedAtMs === 'number' ? latestDelivered.receivedAtMs : 0
+    const timedOut = now - receivedAtMs >= EMAIL_AUTO_ADVANCE_MS
+
+    if (!hasBeenOpened && !timedOut) {
+      return false
+    }
+  }
+
+  const nextEntry = groupOrder.value
+    .flatMap((group) => group.emails.map((email) => ({ groupId: group.id, email })))
+    .find(({ groupId, email }) => {
+      const emailKey = `${groupId}:${email.id}`
+    return !deliveredEmailIds.value.has(emailKey)
+  })
+
+  if (!nextEntry) return false
+
+  deliverEmail(nextEntry.email, nextEntry.groupId)
+  deliveredEmailIds.value.add(`${nextEntry.groupId}:${nextEntry.email.id}`)
+  return true
+}
+
 function tickSimulation() {
   const now = Date.now()
 
-  schedule.introduction.emails.forEach((email) => {
-    const emailKey = `${schedule.introduction.id}:${email.id}`
-    const isDue = now - introActivatedAt.value >= email.delaySeconds * 1000
+  const stateChanged = maybeDeliverNextEmailInSequence(now)
 
-    if (isDue && !deliveredEmailIds.value.has(emailKey)) {
-      deliverEmail(email, schedule.introduction.id)
-      deliveredEmailIds.value.add(emailKey)
-      saveState()
-    }
-  })
-
-  orderedGroups.value.forEach((group) => {
-    const activatedAt = groupActivationTime.value[group.id]
-    if (!activatedAt) return
-
-    group.emails.forEach((email) => {
-      const emailKey = `${group.id}:${email.id}`
-      const isDue = now - activatedAt >= email.delaySeconds * 1000
-
-      if (isDue && !deliveredEmailIds.value.has(emailKey)) {
-        deliverEmail(email, group.id)
-        deliveredEmailIds.value.add(emailKey)
-        saveState()
-      }
-    })
-  })
+  if (stateChanged) {
+    saveState()
+  }
 }
 
 function moveGroup(groupId, direction) {
@@ -550,6 +567,7 @@ function releaseNextGroupIfReady() {
       [groupId]: Date.now()
     }
     saveState()
+    tickSimulation()
   }
 }
 
@@ -761,6 +779,7 @@ watch(selectedEmailId, (instanceId) => {
     target.openedAtMs = Date.now()
   }
   saveState()
+  tickSimulation()
 })
 
 async function initializeSimulation() {

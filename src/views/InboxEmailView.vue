@@ -192,14 +192,15 @@ watch(
             <span>Declare this email as unsafe</span>
           </label>
 
-          <label v-if="!isSentRoute && email.taskId" class="task-row">
+          <!-- <label v-if="!isSentRoute && email.taskId" class="task-row">
             <input
               type="checkbox"
               :checked="completedTasks[email.taskId] === true"
               @change="toggleTask(email.taskId, $event.target.checked)"
             />
             <span>Mark task complete: {{ email.taskLabel }}</span>
-          </label> </div>
+          </label>  -->
+        </div>
 
     
         </template>
