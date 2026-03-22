@@ -25,36 +25,39 @@
       "emails": [
         {
           "id": "g1-1",
-          "from": "hr@company.test",
-          "subject": "Employee file request (Notion credentials)",
-          "body": "Please verify employee profile 1024. First copy credentials for Notion from the password manager, then confirm the profile is complete.",
+          "from": "admmailinbox@adm.com",
+          "subject": "Company mailbox",
+          "body": "Hi Taylor, <br> This link will take you to the company inbox. All the mails that are sent to the company in general will arrive here. Keeping an eye on this inbox is the responsibility of all members of your team so be sure to check it often and communicate who picks up which email. Please log in to make sure everything works on your end (<a href=\"http://admportal.mailbox.com.local\">admportal.mailbox.com.local</a>).",
           "delaySeconds": 10,
           "linkedCredentialWebsite": "notion",
           "taskId": "task-g1-verify-profile",
           "taskLabel": "Verify employee profile 1024",
-          "isAttack": false
+          "isAttack": false,
+           "avatar": "APM_ICON.png"
         },
         {
           "id": "g1-2",
-          "from": "it-support@company.test",
-          "subject": "Access permission review (Slack credentials)",
-          "body": "Review and validate requested mailbox permissions for Team Blue. Copy Slack credentials from the password manager before validating.",
+          "from": "humanresources@adm.com",
+          "subject": "Banking application)",
+          "body": "Hi Taylor, <br> This link will take you to the company Banking app. This will be able for you to verify, if client paid or not.  Keep an eye out every time a payment deadline has passed. Please log in to make sure everything works on your end (<a href=\"http://admportal.banking.com.local\">admportal.banking.com.local</a>).",
           "delaySeconds": 25,
           "linkedCredentialWebsite": "slack",
           "taskId": "task-g1-review-access",
           "taskLabel": "Review Team Blue mailbox permissions",
-          "isAttack": false
+          "isAttack": false,
+            "avatar": "APM_ICON.png"
         },
         {
           "id": "g1-3",
-          "from": "manager@company.test",
-          "subject": "Daily summary (GitHub credentials)",
-          "body": "Before sending your short summary, copy GitHub credentials from the password manager and include the account confirmation in your note.",
+          "from": "humanresources@adm.com",
+          "subject": "Client list",
+          "body": "Hi Taylor, <br>. In this drive overview you can see the files which list our clients. If you ever need to contact a client you can most likely find their contact information here. This also means that these files need to be handled securely. So make sure you don't grant anyone outside the company access to these files. <br> link : <a href=\"http://admportal.drive.com.local\">admportal.drive.com.local</a>",
           "delaySeconds": 40,
           "linkedCredentialWebsite": "github",
           "taskId": "task-g1-send-summary",
           "taskLabel": "Prepare and send Group 1 summary",
-          "isAttack": false
+          "isAttack": false,
+          "avatar": "APM_ICON.png"
         }
       ]
     },
@@ -64,36 +67,39 @@
       "emails": [
         {
           "id": "g2-1",
-          "from": "finance@company.test",
-          "subject": "Invoice validation (Stripe credentials)",
-          "body": "Check invoice INV-204 and report any mismatch. Start by copying Stripe credentials from the password manager.",
+          "from": "humanresources@adm.com",
+          "subject": "Hour registration",
+          "body": "Hi Taylor, <br> Within ADM we use the following software to register workhours. Everytime you clock in, out, or take a break you should log that here. Make sure that you have access to this system as you will also use this system to indicate sick days and paid leave. <br> Software link: <a href=\"http://admportal.hours.com.local\">admportal.hours.com.local</a>",
           "delaySeconds": 12,
           "linkedCredentialWebsite": "stripe",
           "taskId": "task-g2-check-invoice",
           "taskLabel": "Validate invoice INV-204",
-          "isAttack": false
+          "isAttack": false,
+            "avatar": "APM_ICON.png"
         },
         {
           "id": "g2-2",
-          "from": "operations@company.test",
-          "subject": "Shift handover (Zoom credentials)",
-          "body": "Review handover notes and acknowledge receipt after copying Zoom credentials from the password manager.",
+          "from": "marketingteam@adm.com",
+          "subject": "Teamspeak",
+          "body": "Hello Taylor, <br> Welcome to the marketing team. Because our team has adopted a hybrid work style not everyone will always be at the office during meetings. In this case we use the following teamspeak application (<a href=\"http://admportal.teamspeak.com.local\">admportal.teamspeak.com.local</a>) to allow everyone to join the meeting. As such, make sure you have access to the teamspeak so you can join any meetings we have. Our next meeting will most likely be tomorrow at 2pm. <br> See you then.",
           "delaySeconds": 28,
           "linkedCredentialWebsite": "zoom",
           "taskId": "task-g2-handover",
           "taskLabel": "Acknowledge shift handover notes",
-          "isAttack": true
+          "isAttack": true,
+          "avatar": "APM-ICON.png"
         },
         {
           "id": "g2-3",
-          "from": "security@company.test",
-          "subject": "Alert triage (Dropbox credentials)",
-          "body": "Triage alert SEC-77 and classify impact. Copy Dropbox credentials from the password manager before recording your impact class.",
+          "from": "humanresources@abm.com",
+          "subject": "Drive access",
+          "body": "Hi Taylor, <br> can you please log in to the drive and confirm you have access to the files? (<a href=\"http://abmportal.drive.com.local\">abmportal.drive.com.local</a>)",
           "delaySeconds": 45,
           "linkedCredentialWebsite": "dropbox",
           "taskId": "task-g2-triage-alert",
           "taskLabel": "Classify alert SEC-77 impact",
-          "isAttack": true
+          "isAttack": true,
+          "avatar": "APM_ICON.png"
         }
       ]
     },
@@ -103,20 +109,20 @@
       "emails": [
         {
           "id": "g3-1",
-          "from": "qa@company.test",
-          "subject": "Final checklist (Figma credentials)",
-          "body": "Complete the end-of-simulation quality checklist. Begin by copying Figma credentials from the password manager.",
+          "from": "angebusiness@hotmail.com",
+          "subject": "Details about recent transactions",
+          "body": "Helllo this is Ange from government of defence. <br> Recently we hired your company to design some sites for us. Can you give me a detailed report of the transactions so we can register them in our bookkeeping. Thanks in advance. Your can find it with this <a href=\"http://admprotal.bank.com.local\">admprotal.bank.com.local</a>.",
           "delaySeconds": 10,
           "linkedCredentialWebsite": "figma",
           "taskId": "task-g3-final-checklist",
           "taskLabel": "Complete final quality checklist",
-          "isAttack": false
+          "isAttack": true
         },
         {
           "id": "g3-2",
-          "from": "lead@company.test",
-          "subject": "Escalation triage (Jira credentials)",
-          "body": "Review two escalated cases and record your decisions. Copy Jira credentials from the password manager before triage.",
+          "from": "creative@bigma.com",
+          "subject": "Account creation",
+          "body": "Thanks for creating an account with Bigma with the username SOMETHING. We hope to assist you on your creative journey. We see that you are part of a larger company and they have already granted you access to their documents so you can start as soon as you want. In order to confirm the account please follow the link below and log in. <a href=\"http:// accountverification.bigma.com.local\"> accountverification.bigma.com.local</a>",
           "delaySeconds": 24,
           "linkedCredentialWebsite": "jira",
           "taskId": "task-g3-escalation-review",
@@ -125,15 +131,38 @@
         },
         {
           "id": "g3-3",
-          "from": "simulation@company.test",
-          "subject": "Simulation closeout (Trello credentials)",
-          "body": "Send closeout confirmation when all tasks are done. Copy Trello credentials from the password manager as the final verification step.",
+          "from": "Elisamarketing@adm.com",
+          "subject": "Handy site",
+          "body": "Hey Taylor, <br> welcome to the team. My name is Elise and we'll probably see each other soon. For now I wanted to sent you this <a href=\"http://marketingdatabase.com.local\">link</a> to the legal database we use within this team. I set up the account myself so all you need to do is login and later you can change the password. Good luck with your first day : ).",
           "delaySeconds": 40,
           "linkedCredentialWebsite": "trello",
           "taskId": "task-g3-closeout",
           "taskLabel": "Send simulation closeout confirmation",
           "isAttack": true
-        }
+        },
+          {
+            "id": "g3-4",
+            "from": "creatives@bigma.com",
+            "subject": "Joining the company",
+            "body": "Thanks for creating your account.<br> In order to join the company team we ask you to login via the following <a href=\"http://loginverfication.bigna.com.locall\">link</a>. This will ensure you have access to all the files belonging to your company.",
+            "linkedCredentialWebsite": "asana",
+            "delaySeconds": 50,
+            "taskId": "task-g3-4",
+            "taskLabel": "Task for email g3-4",
+            "isAttack": true
+           },
+{
+   "id": "g3-5",
+            "from": "Humanresources@adm.com",
+            "subject": "re: Welcom and account verification",
+            "body": "Hi Taylor, <br> We got confirmation that you've activated all the accounts for now. Good job. The last thing you have to do is click the following <a href=\"http://admportal.finish.com.local\">link</a> and download the file that records your activity for today. <br> Thank you for your work.",
+            "linkedCredentialWebsite": "asana",
+            "delaySeconds": 50,
+            "taskId": "task-g3-4",
+            "taskLabel": "Task for email g3-4",
+            "isAttack": true
+}
+
       ]
     }
   ]
