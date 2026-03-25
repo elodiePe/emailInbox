@@ -218,7 +218,34 @@ const orderedGroups = computed(() => {
   return [...ordered, ...missing]
 })
 
-const groupOrder = computed(() => [schedule.introduction, ...orderedGroups.value])
+const outroEmails = computed(() => {
+  const rawOutro = schedule.outro
+  if (!rawOutro) return []
+
+  if (Array.isArray(rawOutro.emails)) {
+    return rawOutro.emails
+  }
+
+  if (typeof rawOutro === 'object' && rawOutro.id && rawOutro.subject && rawOutro.body) {
+    return [rawOutro]
+  }
+
+  return []
+})
+
+const groupOrder = computed(() => {
+  const groups = [schedule.introduction, ...orderedGroups.value]
+  if (outroEmails.value.length === 0) return groups
+
+  return [
+    ...groups,
+    {
+      id: 'outro',
+      label: 'Outro',
+      emails: outroEmails.value
+    }
+  ]
+})
 
 const allTasksByGroup = computed(() => {
   const map = {}

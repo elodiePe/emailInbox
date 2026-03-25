@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useSimulationStore } from '../composables/useSimulationStore'
 
@@ -20,6 +20,7 @@ const {
 
 const unreadCount = computed(() => incomingEmails.value.filter((item) => !item.isRead).length)
 const isSentRoute = computed(() => route.name === 'sent-email')
+const isMobileSidebarOpen = ref(false)
 
 const currentFolder = computed(() => {
   if (isSentRoute.value) return 'sent'
@@ -89,6 +90,7 @@ function syncSelectedEmailFromRoute() {
 function goToInboxFolder(folder) {
   const query = folder === 'inbox' ? {} : { folder }
   router.push({ path: '/', query })
+  isMobileSidebarOpen.value = false
 }
 //  function goToSentFolder() {
 //    router.push({ path: '/', query: { tab: 'send', folder: 'sent' } })
@@ -96,6 +98,15 @@ function goToInboxFolder(folder) {
 
 function goToCompose() {
   router.push({ path: '/', query: { tab: 'send', folder: 'sent' } })
+  isMobileSidebarOpen.value = false
+}
+
+function toggleMobileSidebar() {
+  isMobileSidebarOpen.value = !isMobileSidebarOpen.value
+}
+
+function closeMobileSidebar() {
+  isMobileSidebarOpen.value = false
 }
 
 onMounted(() => {
@@ -113,7 +124,7 @@ watch(
 
 <template>
   <main class="mail-layout">
-    <section class="panel mailbox-sidebar">
+    <section class="panel mailbox-sidebar" :class="{ 'mobile-open': isMobileSidebarOpen }">
       <button class="compose-cta" @click="goToCompose">+ Compose</button>
 <!-- 
       <RouterLink to="/" class="compose-cta" style="display: inline-block; text-align: center; text-decoration: none; color: inherit;">
@@ -128,8 +139,16 @@ watch(
       </ul>
     </section>
 
+    <button
+      class="mobile-sidebar-backdrop"
+      :class="{ visible: isMobileSidebarOpen }"
+      aria-label="Close sidebar"
+      @click="closeMobileSidebar"
+    ></button>
+
     <section class="panel inbox-list-panel mail-read-panel">
       <div class="mail-toolbar">
+        <button class="mobile-sidebar-toggle" @click="toggleMobileSidebar" aria-label="Toggle folders">☰</button>
         <!-- <h2>Email Detail</h2> -->
         <RouterLink to="/" class="tab-link back-link">Back to Inbox</RouterLink>
       </div>
@@ -153,13 +172,14 @@ watch(
                 <div v-else class="gmail-avatar">{{ senderInitial }}</div>
                 <div class="gmail-sender-text">
                   <div class="sender-horizontaly">
+                    <div class="name-verified">
                     <p class="gmail-sender-name">{{ senderName }}</p>
                     <span
                       v-if="isAccountVerified"
                       class="verified-icon"
                       title="Verified account: sender identity has been confirmed by the system."
                       aria-label="Verified account"
-                    ></span>
+                    ></span></div>
                     <p class="gmail-sender-address">&lt;{{ email.from }}&gt;</p>
                   </div>
            
@@ -169,6 +189,9 @@ watch(
 
               <div class="gmail-right-meta">
                 <p class="gmail-time">{{ email.receivedAt }}</p>
+            
+                <p class="gmail-sender-to-mobile">{{ isSentRoute ? `to ${email.to}` : 'to me' }}</p>
+
                 <!-- <div class="gmail-actions" aria-label="Email actions">
                   <button type="button" class="gmail-action-btn">Star</button>
                   <button type="button" class="gmail-action-btn">Reply</button>
@@ -222,14 +245,14 @@ watch(
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 14px;
+  margin-bottom: 5px;
 }
 
 .gmail-subject {
-  margin: 0;
-  font-size: 1.85rem;
+  margin-left: 48px;
+  font-size: 1.35rem;
   font-weight: 400;
-  color: #202124;
+  color: #202124; 
   line-height: 1.25;
 }
 
@@ -237,7 +260,7 @@ watch(
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+
 }
 
 .gmail-sender-block {
@@ -278,10 +301,15 @@ watch(
   color: #5f6368;
   font-size: 0.82rem;
 }
+.gmail-sender-to-mobile {
+  display: none;
+}
 
 .gmail-right-meta {
-  text-align: right;
-  flex-shrink: 0;
+    text-align: left;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
 }
 
 .gmail-time {
@@ -344,17 +372,122 @@ watch(
   gap: 6px;
   align-items: center;
 }
+.name-verified {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mobile-sidebar-toggle {
+  display: none;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #0f172a;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.mobile-sidebar-backdrop {
+  display: none;
+}
+
 @media (max-width: 760px) {
+  .mail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .mobile-sidebar-toggle {
+    display: inline-grid;
+    place-items: center;
+  }
+
+  .mailbox-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: min(82vw, 300px);
+    z-index: 30;
+    transform: translateX(-104%);
+    transition: transform 0.22s ease;
+    border-radius: 0 12px 12px 0;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.22);
+    overflow-y: auto;
+  }
+
+  .mailbox-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .mobile-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    border: 0;
+    background: rgba(2, 6, 23, 0.42);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .mobile-sidebar-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
   .gmail-subject {
     font-size: 1.35rem;
   }
 
-  .gmail-meta-row {
+  /* .gmail-meta-row {
     flex-direction: column;
-  }
+  } */
+.name-verified {
+    display: flex;
+    align-items: center;
+    gap: 4px;
 
+}
   .gmail-right-meta {
     text-align: left;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+  .sender-horizontaly {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+  .gmail-time {
+  margin: 0 0 0px;
+  color: #5f6368;
+  font-size: 0.82rem;
+}
+
+  .gmail-sender-text {
+    display: flex;
+    flex-direction: row;
+    padding-left: 1px;
+    align-items: flex-end;
+  
+  }
+  .gmail-sender-to {
+    visibility: hidden;
+  }
+  .gmail-sender-to-mobile {
+display: block;
+    margin: 0;
+    visibility: visible;
+     color: #5f6368;
+  font-size: 0.82rem;
+  text-align: right;
+
   }
 }
 </style>

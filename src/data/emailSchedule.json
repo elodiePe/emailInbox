@@ -8,8 +8,7 @@
         "from": "humanresources@adm.com",
         "accountVerified": true,
         "subject": "Welcome and account activation",
-        "body": "Hi Taylor, Welcome to APM!<br> We are thrilled to have you join us. <br>To get you started, we have set up your official company credentials. This email serves as your account activation notive and to ensure your worksation and communication are functional.<br> To activate your account, please log in to your Apex portal page (<a href=\"http://admportal.activation.com.local\">admportal.activation.com.local</a>). <br> <br> The HR team",
-        "delaySeconds": 2,
+        "body": "<div style=\"margin:1rem 0; border:1px solid #cfe9fb; border-radius:16px; overflow:hidden; background:#f7fcff; color:#0f2847; font-family:Segoe UI, Arial, sans-serif; line-height:1.6;\"><div style=\"background:linear-gradient(90deg,#0050B7 0%,#4AAAEF 100%); color:#ffffff; padding:12px 16px; font-size:14px; font-weight:700; letter-spacing:.3px;\">APM Onboarding </div><div style=\"padding:16px;\"><p style=\"margin:0 0 12px;\">Hi Taylor,</p><p style=\"margin:0 0 12px;\">Welcome to APM. We are thrilled to have you join us.</p><p style=\"margin:0 0 12px;\">To get you started, we have set up your official company credentials. This email serves as your account activation notice and helps ensure your workstation and communication channels are functional.</p><p style=\"margin:0 0 14px;\">To activate your account, please log in to your Apex portal page.</p><p style=\"margin:0 0 16px;\"><a href=\"http://admportal.activation.com.local\" target=\"_blank\" style=\"display:inline-block; padding:10px 14px; border-radius:999px; background:#DB2063; color:#ffffff; text-decoration:none; font-weight:700;\">Open Activation Portal</a></p><p style=\"margin:14px 0 0; text-align:right; color:#4f6b86;\">The HR team</p></div></div>",
         "linkedCredentialWebsite": "admportal",
         "taskId": "task-intro-read",
         "isAttack": false,
@@ -26,9 +25,10 @@
         {
           "id": "g1-1",
           "from": "admmailinbox@adm.com",
+                  "accountVerified": true,
+
           "subject": "Company mailbox",
-          "body": "Hi Taylor, <br> This link will take you to the company inbox. All the mails that are sent to the company in general will arrive here. Keeping an eye on this inbox is the responsibility of all members of your team so be sure to check it often and communicate who picks up which email. Please log in to make sure everything works on your end (<a href=\"http://admportal.mailbox.com.local\">admportal.mailbox.com.local</a>).",
-          "delaySeconds": 10,
+          "body": "<div style=\"margin:1rem 0; border:1px solid #cfe9fb; border-radius:16px; overflow:hidden; background:#f7fcff; color:#0f2847; font-family:Segoe UI, Arial, sans-serif; line-height:1.6;\"><div style=\"background:linear-gradient(90deg,#0050B7 0%,#4AAAEF 100%); color:#ffffff; padding:12px 16px; font-size:14px; font-weight:700; letter-spacing:.3px;\">Company Mailbox </div><div style=\"padding:16px;\"><p style=\"margin:0 0 12px;\">Hi Taylor,</p><p style=\"margin:0 0 12px;\">This link will take you to the company inbox.</p><p style=\"margin:0 0 12px;\">All emails sent to the company in general will arrive here. Keeping an eye on this inbox is the responsibility of all members of your team, so be sure to check it often and communicate who picks up which email.</p><p style=\"margin:0 0 14px;\">Please log in to make sure everything works on your end.</p><p style=\"margin:0 0 16px;\"><a href=\"http://admportal.mailbox.com.local\" target=\"_blank\" style=\"display:inline-block; padding:10px 14px; border-radius:999px; background:#DB2063; color:#ffffff; text-decoration:none; font-weight:700;\">Open Company Mailbox</a></p><p style=\"margin:14px 0 0; text-align:right; color:#4f6b86;\">The HR team</p></div></div>",
           "linkedCredentialWebsite": "notion",
           "taskId": "task-g1-verify-profile",
           "taskLabel": "Verify employee profile 1024",
@@ -38,9 +38,10 @@
         {
           "id": "g1-2",
           "from": "humanresources@adm.com",
-          "subject": "Banking application)",
-          "body": "Hi Taylor, <br> This link will take you to the company Banking app. This will be able for you to verify, if client paid or not.  Keep an eye out every time a payment deadline has passed. Please log in to make sure everything works on your end (<a href=\"http://admportal.banking.com.local\">admportal.banking.com.local</a>).",
-          "delaySeconds": 25,
+                  "accountVerified": true,
+
+          "subject": "Banking application",
+          "body": "<div style=\"margin:1rem 0; border:1px solid #cfe9fb; border-radius:16px; overflow:hidden; background:#f7fcff; color:#0f2847; font-family:Segoe UI, Arial, sans-serif; line-height:1.6;\"><div style=\"background:linear-gradient(90deg,#0050B7 0%,#4AAAEF 100%); color:#ffffff; padding:12px 16px; font-size:14px; font-weight:700; letter-spacing:.3px;\">Banking Application </div><div style=\"padding:16px;\"><p style=\"margin:0 0 12px;\">Hi Taylor,</p><p style=\"margin:0 0 12px;\">This link will take you to the company Banking app.</p><p style=\"margin:0 0 12px;\">You will be able to verify whether a client has paid or not. Keep an eye out every time a payment deadline has passed.</p><p style=\"margin:0 0 14px;\">Please log in to make sure everything works on your end.</p><p style=\"margin:0 0 16px;\"><a href=\"http://admportal.banking.com.local\" target=\"_blank\" style=\"display:inline-block; padding:10px 14px; border-radius:999px; background:#DB2063; color:#ffffff; text-decoration:none; font-weight:700;\">Open Banking App</a></p><p style=\"margin:14px 0 0; text-align:right; color:#4f6b86;\">The HR team</p></div></div>",
           "linkedCredentialWebsite": "slack",
           "taskId": "task-g1-review-access",
           "taskLabel": "Review Team Blue mailbox permissions",
@@ -50,9 +51,10 @@
         {
           "id": "g1-3",
           "from": "humanresources@adm.com",
+                  "accountVerified": true,
+
           "subject": "Client list",
-          "body": "Hi Taylor, <br>. In this drive overview you can see the files which list our clients. If you ever need to contact a client you can most likely find their contact information here. This also means that these files need to be handled securely. So make sure you don't grant anyone outside the company access to these files. <br> link : <a href=\"http://admportal.drive.com.local\">admportal.drive.com.local</a>",
-          "delaySeconds": 40,
+          "body": "<div style=\"margin:1rem 0; border:1px solid #cfe9fb; border-radius:16px; overflow:hidden; background:#f7fcff; color:#0f2847; font-family:Segoe UI, Arial, sans-serif; line-height:1.6;\"><div style=\"background:linear-gradient(90deg,#0050B7 0%,#4AAAEF 100%); color:#ffffff; padding:12px 16px; font-size:14px; font-weight:700; letter-spacing:.3px;\">Client List </div><div style=\"padding:16px;\"><p style=\"margin:0 0 12px;\">Hi Taylor,</p><p style=\"margin:0 0 12px;\">In this drive overview, you can see the files that list our clients.</p><p style=\"margin:0 0 12px;\">If you ever need to contact a client, you can most likely find their contact information here. This also means these files need to be handled securely.</p><p style=\"margin:0 0 14px;\">Please make sure you do not grant anyone outside the company access to these files.</p><p style=\"margin:0 0 16px;\"><a href=\"http://admportal.drive.com.local\" target=\"_blank\" style=\"display:inline-block; padding:10px 14px; border-radius:999px; background:#DB2063; color:#ffffff; text-decoration:none; font-weight:700;\">Open Client Drive</a></p><p style=\"margin:14px 0 0; text-align:right; color:#4f6b86;\">The HR team</p></div></div>",
           "linkedCredentialWebsite": "github",
           "taskId": "task-g1-send-summary",
           "taskLabel": "Prepare and send Group 1 summary",
@@ -68,8 +70,10 @@
         {
           "id": "g2-1",
           "from": "humanresources@adm.com",
+                  "accountVerified": true,
+
           "subject": "Hour registration",
-          "body": "Hi Taylor, <br> Within ADM we use the following software to register workhours. Everytime you clock in, out, or take a break you should log that here. Make sure that you have access to this system as you will also use this system to indicate sick days and paid leave. <br> Software link: <a href=\"http://admportal.hours.com.local\">admportal.hours.com.local</a>",
+          "body": "<div style=\"margin:1rem 0; border:1px solid #cfe9fb; border-radius:16px; overflow:hidden; background:#f7fcff; color:#0f2847; font-family:Segoe UI, Arial, sans-serif; line-height:1.6;\"><div style=\"background:linear-gradient(90deg,#0050B7 0%,#4AAAEF 100%); color:#ffffff; padding:12px 16px; font-size:14px; font-weight:700; letter-spacing:.3px;\">Hour Registration </div><div style=\"padding:16px;\"><p style=\"margin:0 0 12px;\">Hi Taylor,</p><p style=\"margin:0 0 12px;\">Within ADM, we use the following software to register work hours.</p><p style=\"margin:0 0 12px;\">Every time you clock in, clock out, or take a break, you should log it there. Make sure you have access, as you will also use this system to indicate sick days and paid leave.</p><p style=\"margin:0 0 14px;\">Please log in to make sure everything works on your end.</p><p style=\"margin:0 0 16px;\"><a href=\"http://admportal.hours.com.local\" target=\"_blank\" style=\"display:inline-block; padding:10px 14px; border-radius:999px; background:#DB2063; color:#ffffff; text-decoration:none; font-weight:700;\">Open Hour Registration</a></p><p style=\"margin:14px 0 0; text-align:right; color:#4f6b86;\">The HR team</p></div></div>",
           "delaySeconds": 12,
           "linkedCredentialWebsite": "stripe",
           "taskId": "task-g2-check-invoice",
@@ -81,19 +85,21 @@
           "id": "g2-2",
           "from": "marketingteam@adm.com",
           "subject": "Teamspeak",
-          "body": "Hello Taylor, <br> Welcome to the marketing team. Because our team has adopted a hybrid work style not everyone will always be at the office during meetings. In this case we use the following teamspeak application (<a href=\"http://admportal.teamspeak.com.local\">admportal.teamspeak.com.local</a>) to allow everyone to join the meeting. As such, make sure you have access to the teamspeak so you can join any meetings we have. Our next meeting will most likely be tomorrow at 2pm. <br> See you then.",
+                  "accountVerified": true,
+
+          "body": "<div style=\"margin:1rem 0; border:1px solid #cfe9fb; border-radius:16px; overflow:hidden; background:#f7fcff; color:#0f2847; font-family:Segoe UI, Arial, sans-serif; line-height:1.6;\"><div style=\"background:linear-gradient(90deg,#0050B7 0%,#4AAAEF 100%); color:#ffffff; padding:12px 16px; font-size:14px; font-weight:700; letter-spacing:.3px;\">Teamspeak Access </div><div style=\"padding:16px;\"><p style=\"margin:0 0 12px;\">Hello Taylor,</p><p style=\"margin:0 0 12px;\">Welcome to the marketing team.</p><p style=\"margin:0 0 12px;\">Because our team has adopted a hybrid work style, not everyone will always be at the office during meetings. In this case, we use the following Teamspeak application to allow everyone to join the meeting.</p><p style=\"margin:0 0 12px;\">Please make sure you have access to Teamspeak so you can join any meetings we have. Our next meeting will most likely be tomorrow at 2pm.</p><p style=\"margin:0 0 16px;\"><a href=\"http://admportal.teamspeak.com.local\" target=\"_blank\" style=\"display:inline-block; padding:10px 14px; border-radius:999px; background:#DB2063; color:#ffffff; text-decoration:none; font-weight:700;\">Open Teamspeak</a></p><p style=\"margin:14px 0 0; text-align:right; color:#4f6b86;\">See you then.</p></div></div>",
           "delaySeconds": 28,
           "linkedCredentialWebsite": "zoom",
           "taskId": "task-g2-handover",
           "taskLabel": "Acknowledge shift handover notes",
-          "isAttack": true,
+          "isAttack": false,
           "avatar": "APM-ICON.png"
         },
         {
           "id": "g2-3",
           "from": "humanresources@abm.com",
           "subject": "Drive access",
-          "body": "Hi Taylor, <br> can you please log in to the drive and confirm you have access to the files? (<a href=\"http://abmportal.drive.com.local\">abmportal.drive.com.local</a>)",
+          "body": "<div style=\"margin:1rem 0; border:1px solid #cfe9fb; border-radius:16px; overflow:hidden; background:#f7fcff; color:#0f2847; font-family:Segoe UI, Arial, sans-serif; line-height:1.6;\"><div style=\"background:linear-gradient(90deg,#0050B7 0%,#4AAAEF 100%); color:#ffffff; padding:12px 16px; font-size:14px; font-weight:700; letter-spacing:.3px;\">Drive Access </div><div style=\"padding:16px;\"><p style=\"margin:0 0 12px;\">Hi Taylor,</p><p style=\"margin:0 0 12px;\">Can you please log in to the drive and confirm you have access to the files?</p><p style=\"margin:0 0 16px;\"><a href=\"http://abmportal.drive.com.local\" target=\"_blank\" style=\"display:inline-block; padding:10px 14px; border-radius:999px; background:#DB2063; color:#ffffff; text-decoration:none; font-weight:700;\">Open Drive</a></p><p style=\"margin:14px 0 0; text-align:right; color:#4f6b86;\">The HR team</p></div></div>",
           "delaySeconds": 45,
           "linkedCredentialWebsite": "dropbox",
           "taskId": "task-g2-triage-alert",
@@ -120,50 +126,53 @@
         },
         {
           "id": "g3-2",
-          "from": "creative@bigma.com",
+          "from": "support@figma.com",
           "subject": "Account creation",
-          "body": "Thanks for creating an account with Bigma with the username SOMETHING. We hope to assist you on your creative journey. We see that you are part of a larger company and they have already granted you access to their documents so you can start as soon as you want. In order to confirm the account please follow the link below and log in. <a href=\"http:// accountverification.bigma.com.local\"> accountverification.bigma.com.local</a>",
+          "body": "<div style=\"background:#ffffff; padding:36px 20px; color:#111111; font-family:Arial, Helvetica, sans-serif;\"><div style=\"max-width:560px; margin:0 auto;\"><p style=\"margin:0 0 42px; font-size:26px; line-height:1; font-weight:500; letter-spacing:-0.02em;\">Figma </p><h2 style=\"margin:0 0 18px; text-align:center; font-size:32px; line-height:1.1; font-weight:700;\">Thanks for creating your account.</h2><p style=\"margin:0 0 34px; text-align:center; font-size:18px; line-height:1.5; color:#2f2f2f;\">We hope to assist you on your creative journey. Since you are part of a larger company, access has already been prepared so you can get started quickly. Please confirm your account using the link below.</p><p style=\"margin:0 0 58px; text-align:center;\"><a href=\"http://accountverification.figma.com.local\" target=\"_blank\" style=\"display:inline-block; border:3px solid #111111; border-radius:8px; background:#ffffff; color:#111111; text-decoration:none; font-weight:700; font-size:18px; line-height:1; padding:20px 28px;\">Verify access</a></p><div style=\"height:1px; background:#d6d6d6; margin:0 0 34px;\"></div><p style=\"margin:0 auto 26px; max-width:520px; text-align:center; color:#7b7b7b; font-size:14px; line-height:1.25;\">Figma is a design platform for teams who build products together. Born on the Web, Figma helps the entire product team create, test, and ship better designs, faster.</p><p style=\"margin:0; text-align:center; color:#8a8a8a; font-size:12px; line-height:1.25;\">760 Market Street, Floor 10<br>San Francisco, CA, 94102</p></div></div>",
           "delaySeconds": 24,
           "linkedCredentialWebsite": "jira",
           "taskId": "task-g3-escalation-review",
           "taskLabel": "Review 2 escalated cases",
-          "isAttack": false
+          "isAttack": false,
+          "avatar": "figma.png"
         },
         {
           "id": "g3-3",
-          "from": "Elisamarketing@adm.com",
+          "from": "elisa.lerochet@adm.com",
           "subject": "Handy site",
-          "body": "Hey Taylor, <br> welcome to the team. My name is Elise and we'll probably see each other soon. For now I wanted to sent you this <a href=\"http://marketingdatabase.com.local\">link</a> to the legal database we use within this team. I set up the account myself so all you need to do is login and later you can change the password. Good luck with your first day : ).",
+          "body": "<div style=\"margin:1rem 0; border:1px solid #cfe9fb; border-radius:16px; overflow:hidden; background:#f7fcff; color:#0f2847; font-family:Segoe UI, Arial, sans-serif; line-height:1.6;\"><div style=\"background:linear-gradient(90deg,#0050B7 0%,#4AAAEF 100%); color:#ffffff; padding:12px 16px; font-size:14px; font-weight:700; letter-spacing:.3px;\">Team Legal Database </div><div style=\"padding:16px;\"><p style=\"margin:0 0 12px;\">Hey Taylor,</p><p style=\"margin:0 0 12px;\">Welcome to the team. My name is Elise and we will probably see each other soon.</p><p style=\"margin:0 0 12px;\">For now, I wanted to send you this link to the legal database we use within this team.</p><p style=\"margin:0 0 12px;\">I set up the account myself, so all you need to do is log in and later you can change the password.</p><p style=\"margin:0 0 16px;\"><a href=\"http://marketingdatabase.com.local\" target=\"_blank\" style=\"display:inline-block; padding:10px 14px; border-radius:999px; background:#DB2063; color:#ffffff; text-decoration:none; font-weight:700;\">Open Legal Database</a></p><p style=\"margin:14px 0 0; text-align:right; color:#4f6b86;\">Good luck with your first day.</p></div></div>",
           "delaySeconds": 40,
           "linkedCredentialWebsite": "trello",
           "taskId": "task-g3-closeout",
           "taskLabel": "Send simulation closeout confirmation",
-          "isAttack": true
+          "isAttack": false
         },
           {
             "id": "g3-4",
-            "from": "creatives@bigma.com",
+            "from": "support@fijma.com",
             "subject": "Joining the company",
-            "body": "Thanks for creating your account.<br> In order to join the company team we ask you to login via the following <a href=\"http://loginverfication.bigna.com.locall\">link</a>. This will ensure you have access to all the files belonging to your company.",
+            "body": "<div style=\"background:#ffffff; padding:36px 20px; color:#111111; font-family:Arial, Helvetica, sans-serif;\"><div style=\"max-width:560px; margin:0 auto;\"><p style=\"margin:0 0 42px; font-size:26px; line-height:1; font-weight:500; letter-spacing:-0.02em;\">Figma </p><h2 style=\"margin:0 0 18px; text-align:center; font-size:32px; line-height:1.1; font-weight:700;\">Thanks for creating your account.</h2><p style=\"margin:0 0 34px; text-align:center; font-size:18px; line-height:1.5; color:#2f2f2f;\">In order to join the company team we ask you to login via the following link. This will ensure you have access to all files belongings to your company.</p><p style=\"margin:0 0 58px; text-align:center;\"><a href=\"http://loginverfication.fijma.com.local\" target=\"_blank\" style=\"display:inline-block; border:3px solid #111111; border-radius:8px; background:#ffffff; color:#111111; text-decoration:none; font-weight:700; font-size:18px; line-height:1; padding:20px 28px;\">Verify access</a></p><div style=\"height:1px; background:#d6d6d6; margin:0 0 34px;\"></div><p style=\"margin:0 auto 26px; max-width:520px; text-align:center; color:#7b7b7b; font-size:14px; line-height:1.25;\">Figma is a design platform for teams who build products together. Born on the Web, Figma helps the entire product team create, test, and ship better designs, faster.</p><p style=\"margin:0; text-align:center; color:#8a8a8a; font-size:12px; line-height:1.25;\">760 Market Street, Floor 10<br>San Francisco, CA, 94102</p></div></div>",
             "linkedCredentialWebsite": "asana",
             "delaySeconds": 50,
             "taskId": "task-g3-4",
             "taskLabel": "Task for email g3-4",
-            "isAttack": true
-           },
-{
-   "id": "g3-5",
-            "from": "Humanresources@adm.com",
-            "subject": "re: Welcom and account verification",
-            "body": "Hi Taylor, <br> We got confirmation that you've activated all the accounts for now. Good job. The last thing you have to do is click the following <a href=\"http://admportal.finish.com.local\">link</a> and download the file that records your activity for today. <br> Thank you for your work.",
-            "linkedCredentialWebsite": "asana",
-            "delaySeconds": 50,
-            "taskId": "task-g3-4",
-            "taskLabel": "Task for email g3-4",
-            "isAttack": true
-}
+            "isAttack": true,
+            "avatar": "figma.png"
+           }
 
       ]
     }
-  ]
+  ],
+
+  "outro": {
+      "id": "outro-1",
+            "from": "Humanresources@adm.com",
+            "subject": "re: Welcom and account verification",
+            "body": "<div style=\"margin:1rem 0; border:1px solid #cfe9fb; border-radius:16px; overflow:hidden; background:#f7fcff; color:#0f2847; font-family:Segoe UI, Arial, sans-serif; line-height:1.6;\"><div style=\"background:linear-gradient(90deg,#0050B7 0%,#4AAAEF 100%); color:#ffffff; padding:12px 16px; font-size:14px; font-weight:700; letter-spacing:.3px;\">Final Confirmation </div><div style=\"padding:16px;\"><p style=\"margin:0 0 12px;\">Hi Taylor,</p><p style=\"margin:0 0 12px;\">We got confirmation that you've activated all the accounts for now. Good job.</p><p style=\"margin:0 0 14px;\">The last thing you have to do is click the link below and download the file that records your activity for today.</p><p style=\"margin:0 0 16px;\"><a href=\"http://admportal.finish.com.local\" target=\"_blank\" style=\"display:inline-block; padding:10px 14px; border-radius:999px; background:#DB2063; color:#ffffff; text-decoration:none; font-weight:700;\">Open Final Portal</a></p><p style=\"margin:14px 0 0; text-align:right; color:#4f6b86;\">Thank you for your work.</p></div></div>",
+            "linkedCredentialWebsite": "asana",
+            "delaySeconds": 50,
+            "taskId": "task-g3-4",
+            "taskLabel": "Task for email g3-4",
+            "isAttack": true
+  }
 }

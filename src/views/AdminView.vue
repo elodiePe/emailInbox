@@ -361,7 +361,6 @@ onMounted(() => {
           }"
         >
           <p class="subject">{{ item.groupLabel }} • {{ item.subject }}</p>
-          <p class="meta">From: {{ item.from }} • Delay: {{ item.delaySeconds }}s</p>
           <div class="timeline-status-row">
             <span class="timeline-badge" :class="item.delivered ? 'sent-done' : 'sent-pending'">
               Sent: {{ item.delivered ? 'Yes' : 'No' }}
@@ -385,8 +384,6 @@ onMounted(() => {
     </section>
 
     <section class="panel admin-actions-panel">
-      <h2>Admin Controls</h2>
-      <p class="meta">Use checkboxes to manage tasks manually for test flow control.</p>
 
       <h3>Group Order</h3>
       <ul class="group-order-list">
@@ -399,7 +396,7 @@ onMounted(() => {
         </li>
       </ul>
 
-      <div v-for="group in groupOrder" :key="`admin-${group.id}`" class="group-block">
+      <!-- <div v-for="group in groupOrder" :key="`admin-${group.id}`" class="group-block">
         <h3>
           {{ group.label }}
           <span class="status" :class="{ unlocked: unlockedGroups[group.id] || group.id === 'intro' }">
@@ -414,7 +411,7 @@ onMounted(() => {
           />
           <span>{{ task.label }}</span>
         </label>
-      </div>
+      </div> -->
 
       <label class="export-name-field">
         Excel filename

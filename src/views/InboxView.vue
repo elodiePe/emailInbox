@@ -23,6 +23,7 @@ const {
 const activeTab = ref('inbox')
 const searchQuery = ref('')
 const selectedFolder = ref('inbox')
+const isMobileSidebarOpen = ref(false)
 const router = useRouter()
 const route = useRoute()
 
@@ -69,9 +70,17 @@ const isInboxFolder = computed(() => selectedFolder.value === 'inbox')
 const isUnreadFolder = computed(() => selectedFolder.value === 'unread')
 const isSentFolder = computed(() => selectedFolder.value === 'sent')
 
+function stripHtmlTags(html) {
+  if (!html) return ''
+  const div = document.createElement('div')
+  div.innerHTML = html
+  return div.textContent || div.innerText || ''
+}
+
 function getPreview(body) {
   if (!body) return ''
-  return body.length > 80 ? `${body.slice(0, 80)}...` : body
+  const plainText = stripHtmlTags(body)
+  return plainText.length > 80 ? `${plainText.slice(0, 80)}...` : plainText
 }
 
 function getSubjectPreview(subject) {
@@ -81,10 +90,12 @@ function getSubjectPreview(subject) {
 
 function openEmail(emailId) {
   selectEmail(emailId)
+  isMobileSidebarOpen.value = false
   router.push(`/inbox/${encodeURIComponent(emailId)}`)
 }
 
 function openSentEmail(emailId) {
+  isMobileSidebarOpen.value = false
   router.push(`/sent/${encodeURIComponent(emailId)}`)
 }
 
@@ -103,13 +114,23 @@ function syncFromQuery() {
 function setInboxFolder(folder) {
   activeTab.value = 'inbox'
   selectedFolder.value = folder
+  isMobileSidebarOpen.value = false
   router.replace({ path: '/', query: folder === 'inbox' ? {} : { folder } })
 }
 
 function openCompose() {
   activeTab.value = 'send'
   selectedFolder.value = 'sent'
+  isMobileSidebarOpen.value = false
   router.replace({ path: '/', query: { tab: 'send', folder: 'sent' } })
+}
+
+function toggleMobileSidebar() {
+  isMobileSidebarOpen.value = !isMobileSidebarOpen.value
+}
+
+function closeMobileSidebar() {
+  isMobileSidebarOpen.value = false
 }
 
 function openSentFolder() {
@@ -136,7 +157,7 @@ watch(
   </nav> -->
 
   <main v-if="activeTab === 'inbox'" class="mail-layout">
-    <section class="panel mailbox-sidebar">
+    <section class="panel mailbox-sidebar" :class="{ 'mobile-open': isMobileSidebarOpen }">
       <button class="compose-cta" @click="openCompose">+ Compose</button>
 <!-- 
       <h2>Folders</h2> -->
@@ -166,8 +187,16 @@ watch(
       </div> -->
     </section>
 
+    <button
+      class="mobile-sidebar-backdrop"
+      :class="{ visible: isMobileSidebarOpen }"
+      aria-label="Close sidebar"
+      @click="closeMobileSidebar"
+    ></button>
+
     <section class="panel inbox-list-panel">
       <div class="mail-toolbar">
+        <button class="mobile-sidebar-toggle" @click="toggleMobileSidebar" aria-label="Toggle folders">☰</button>
         <h2>Inbox</h2>
         <input v-model="searchQuery" type="text" placeholder="Search mail" />
       </div>
@@ -291,5 +320,74 @@ watch(
 
 .inbox-row-inline .meta {
   margin: 0;
+}
+
+.mobile-sidebar-toggle {
+  display: none;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #0f172a;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.mobile-sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 980px) {
+  .inbox-subject {
+    max-width: 20ch;
+  }
+}
+
+@media (max-width: 760px) {
+  .mail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .mobile-sidebar-toggle {
+    display: inline-grid;
+    place-items: center;
+  }
+
+  .mailbox-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: min(82vw, 300px);
+    z-index: 30;
+    transform: translateX(-104%);
+    transition: transform 0.22s ease;
+    border-radius: 0 12px 12px 0;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.22);
+    overflow-y: auto;
+  }
+
+  .mailbox-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .mobile-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    border: 0;
+    background: rgba(2, 6, 23, 0.42);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .mobile-sidebar-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 </style>
