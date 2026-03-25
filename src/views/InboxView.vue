@@ -14,6 +14,8 @@ const {
   composeForm,
   completedTasks,
   toggleTask,
+  clearSelectedEmail,
+  setDeliveryPaused,
   selectEmail,
   toggleEmailUnsafe,
   sendEmail,
@@ -139,13 +141,21 @@ function openSentFolder() {
 
 onMounted(() => {
   initializeSimulation()
+  setDeliveryPaused(false)
   syncFromQuery()
+  if (route.name === 'inbox') {
+    clearSelectedEmail()
+  }
 })
 
 watch(
-  () => route.query,
+  () => [route.name, route.query],
   () => {
+    setDeliveryPaused(false)
     syncFromQuery()
+    if (route.name === 'inbox') {
+      clearSelectedEmail()
+    }
   }
 )
 </script>

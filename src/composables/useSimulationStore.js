@@ -187,6 +187,7 @@ const introActivatedAt = ref(simulationStartedAt)
 const groupActivationTime = ref({})
 const deliveredEmailIds = ref(new Set())
 const groupSequence = ref(schedule.groups.map((group) => group.id))
+const isDeliveryPaused = ref(false)
 const currentSessionId = ref(DEFAULT_ROOM_KEY)
 
 const initialized = ref(false)
@@ -515,10 +516,6 @@ function deliverEmail(email, groupId) {
     receivedAtMs: Date.now(),
     receivedAt: new Date().toLocaleTimeString()
   })
-
-  if (!selectedEmailId.value) {
-    selectedEmailId.value = instanceId
-  }
 }
 
 function getLatestDeliveredEmail() {
@@ -532,7 +529,20 @@ function getLatestDeliveredEmail() {
   return delivered[0] || null
 }
 
+function isEmailDetailRouteActive() {
+  const hash = String(window.location.hash || '')
+  return hash.startsWith('#/inbox/') || hash.startsWith('#/sent/')
+}
+
 function maybeDeliverNextEmailInSequence(now) {
+  if (isDeliveryPaused.value) {
+    return false
+  }
+
+  if (selectedEmailId.value || isEmailDetailRouteActive()) {
+    return false
+  }
+
   const latestDelivered = getLatestDeliveredEmail()
   if (latestDelivered) {
     const hasBeenOpened = latestDelivered.isRead === true
@@ -610,6 +620,16 @@ function selectEmail(instanceId) {
   saveState()
 }
 
+function clearSelectedEmail() {
+  if (!selectedEmailId.value) return
+  selectedEmailId.value = null
+  saveState()
+}
+
+function setDeliveryPaused(paused) {
+  isDeliveryPaused.value = paused === true
+}
+
 function toggleEmailUnsafe(instanceId, unsafe) {
   const target = incomingEmails.value.find((email) => email.instanceId === instanceId)
   if (!target) return
@@ -641,6 +661,7 @@ function resetInMemoryState() {
   groupActivationTime.value = {}
   deliveredEmailIds.value = new Set()
   groupSequence.value = schedule.groups.map((group) => group.id)
+  isDeliveryPaused.value = false
   localRevision.value = 0
 }
 
@@ -854,6 +875,8 @@ function useSimulationStore() {
     setUsabilityResponse,
     setDemographicField,
     selectEmail,
+    clearSelectedEmail,
+    setDeliveryPaused,
     toggleEmailUnsafe,
     sendEmail,
     restartSimulation,

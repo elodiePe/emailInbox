@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useSimulationStore } from '../composables/useSimulationStore'
 
@@ -11,6 +11,8 @@ const {
   incomingEmails,
   completedTasks,
   toggleTask,
+  clearSelectedEmail,
+  setDeliveryPaused,
   selectEmail,
   composeForm,
   initializeSimulation,
@@ -111,7 +113,13 @@ function closeMobileSidebar() {
 
 onMounted(() => {
   initializeSimulation()
+  setDeliveryPaused(true)
   syncSelectedEmailFromRoute()
+})
+
+onBeforeUnmount(() => {
+  setDeliveryPaused(false)
+  clearSelectedEmail()
 })
 
 watch(
