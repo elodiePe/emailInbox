@@ -404,11 +404,9 @@ function applyStatePayload(parsed) {
       .map((email) => `${email.groupId}:${email.id}`)
   )
 
-  if (incomingEmails.value.length === 0) {
-    deliveredEmailIds.value = new Set()
-  } else {
-    deliveredEmailIds.value = new Set([...savedDelivered, ...deliveredFromInbox])
-  }
+  // Keep delivered history even if inbox is currently empty.
+  // Clearing this set causes the scheduler to resend all emails from the start.
+  deliveredEmailIds.value = new Set([...savedDelivered, ...deliveredFromInbox])
 
   localRevision.value = typeof parsed._revision === 'number' ? parsed._revision : 0
 }

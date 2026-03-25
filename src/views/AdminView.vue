@@ -64,6 +64,8 @@ async function getPasswordManagerCredentialCopyRows() {
       challengeAttempts: typeof row.challengeAttempts === 'number' ? row.challengeAttempts : 'N/A',
       challengeDurationSeconds: typeof row.challengeDurationSeconds === 'number' ? row.challengeDurationSeconds : 'N/A',
       challengeDuration: formatSeconds(typeof row.challengeDurationSeconds === 'number' ? row.challengeDurationSeconds : null),
+      requestedAtMs: typeof row.requestedAtMs === 'number' ? row.requestedAtMs : null,
+      completedAtMs: typeof row.completedAtMs === 'number' ? row.completedAtMs : null,
       requestedAtISO: typeof row.requestedAtMs === 'number' ? new Date(row.requestedAtMs).toISOString() : 'N/A',
       completedAtISO: typeof row.completedAtMs === 'number' ? new Date(row.completedAtMs).toISOString() : 'N/A',
       durationSeconds: typeof row.durationSeconds === 'number' ? row.durationSeconds : 'N/A',
@@ -74,45 +76,128 @@ async function getPasswordManagerCredentialCopyRows() {
   }
 }
 
-function buildDetailedEmailStatusRows(timelineEntries, passwordManagerCredentialCopyRows, emailScheduleData) {
-  // Build a map of aggregated data per emailId by matching credentialLinkKey
-  const emailCredentialDataMap = {}
+function normalizeCredentialKey(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+}
 
-  timelineEntries.forEach((email) => {
-    const credentialLinkKey = String(email.linkedCredentialWebsite || '').toLowerCase()
-    if (!credentialLinkKey) return
+function getEmailCredentialKey(email) {
+  // Prefer explicit key when provided, fallback to legacy field.
+  return normalizeCredentialKey(email.linkedCredentialKey || email.linkedCredentialWebsite)
+}
 
-    // Get all credential copy events matching this link key
-    const matchingEvents = passwordManagerCredentialCopyRows.filter((row) => {
-      const rowLinkKey = String(row.credentialLinkKey || '').toLowerCase()
-      return rowLinkKey === credentialLinkKey
+function getEventCredentialKey(event) {
+  return normalizeCredentialKey(event.credentialLinkKey)
+}
+
+function getEventTimestampMs(event) {
+  if (typeof event.requestedAtMs === 'number') return event.requestedAtMs
+  if (typeof event.completedAtMs === 'number') return event.completedAtMs
+  return null
+}
+
+function getEmailStartMs(email) {
+  if (typeof email.openedAtMs === 'number') return email.openedAtMs
+  if (typeof email.receivedAtMs === 'number') return email.receivedAtMs
+  return null
+}
+
+function buildDetailedEmailStatusRows(timelineEntries, passwordManagerCredentialCopyRows) {
+  const emailsWithOrder = timelineEntries.map((email, index) => ({
+    ...email,
+    __order: index + 1,
+    __credentialKey: getEmailCredentialKey(email),
+    __startMs: getEmailStartMs(email)
+  }))
+
+  const emailCountByKey = emailsWithOrder.reduce((acc, email) => {
+    const key = email.__credentialKey
+    if (!key) return acc
+    acc[key] = (acc[key] || 0) + 1
+    return acc
+  }, {})
+
+  const emailBuckets = {}
+  emailsWithOrder.forEach((email) => {
+    emailBuckets[email.id] = []
+  })
+
+  const eventsByKey = new Map()
+  passwordManagerCredentialCopyRows.forEach((event) => {
+    const key = getEventCredentialKey(event)
+    if (!key) return
+    if (!eventsByKey.has(key)) eventsByKey.set(key, [])
+    eventsByKey.get(key).push(event)
+  })
+
+  eventsByKey.forEach((events, key) => {
+    const candidates = emailsWithOrder.filter((email) => email.__credentialKey === key)
+    if (candidates.length === 0) return
+
+    const sortedCandidates = [...candidates].sort((a, b) => {
+      const aStart = typeof a.__startMs === 'number' ? a.__startMs : Number.POSITIVE_INFINITY
+      const bStart = typeof b.__startMs === 'number' ? b.__startMs : Number.POSITIVE_INFINITY
+      if (aStart !== bStart) return aStart - bStart
+      return a.__order - b.__order
     })
 
-    // Filter by action types
+    const sortedEvents = [...events].sort((a, b) => {
+      const aTs = typeof getEventTimestampMs(a) === 'number' ? getEventTimestampMs(a) : Number.POSITIVE_INFINITY
+      const bTs = typeof getEventTimestampMs(b) === 'number' ? getEventTimestampMs(b) : Number.POSITIVE_INFINITY
+      return aTs - bTs
+    })
+
+    sortedEvents.forEach((event) => {
+      const eventTs = getEventTimestampMs(event)
+      let target = sortedCandidates[0]
+
+      if (typeof eventTs === 'number') {
+        sortedCandidates.forEach((candidate) => {
+          if (typeof candidate.__startMs === 'number' && candidate.__startMs <= eventTs) {
+            target = candidate
+          }
+        })
+      }
+
+      emailBuckets[target.id].push(event)
+    })
+  })
+
+  const emailCredentialDataMap = {}
+
+  emailsWithOrder.forEach((email) => {
+    let matchingEvents = emailBuckets[email.id] || []
+
+    // If multiple emails intentionally reuse the same credential key,
+    // expose key-level PM activity on each related row so attacks are not dropped.
+    if (matchingEvents.length === 0 && email.__credentialKey && (emailCountByKey[email.__credentialKey] || 0) > 1) {
+      matchingEvents = eventsByKey.get(email.__credentialKey) || []
+    }
+
     const copyUsernameEvents = matchingEvents.filter((e) => e.actionType === 'copyUsername')
     const copyPasswordEvents = matchingEvents.filter((e) => e.actionType === 'copyPassword')
     const togglePasswordEvents = matchingEvents.filter((e) => e.actionType === 'togglePassword')
-
-    // Get completed copy actions with challenge data
     const completedCopyPasswordEvents = copyPasswordEvents.filter((e) => e.outcome === 'completed')
 
-    // Aggregate timings
     const copyPasswordTotalSeconds = completedCopyPasswordEvents.reduce((sum, e) => {
       const duration = typeof e.durationSeconds === 'number' ? e.durationSeconds : 0
       return sum + duration
     }, 0)
-    const copyPasswordAverageSeconds = completedCopyPasswordEvents.length > 0
-      ? copyPasswordTotalSeconds / completedCopyPasswordEvents.length
-      : 0
+
+    const copyPasswordAverageSeconds =
+      completedCopyPasswordEvents.length > 0
+        ? copyPasswordTotalSeconds / completedCopyPasswordEvents.length
+        : 0
 
     const togglePasswordTotalSeconds = togglePasswordEvents.reduce((sum, e) => {
       const duration = typeof e.durationSeconds === 'number' ? e.durationSeconds : 0
       return sum + duration
     }, 0)
 
-    // Get challenge data from events that have challengeType
     const eventsWithChallenges = matchingEvents.filter((e) => e.challengeType && e.challengeType !== 'N/A')
-    let challengeTypesSet = new Set()
+
+    const challengeTypesSet = new Set()
     let totalAttempts = 0
     let totalChallenges = 0
 
@@ -124,37 +209,27 @@ function buildDetailedEmailStatusRows(timelineEntries, passwordManagerCredential
       }
     })
 
-    const challengeTypes = Array.from(challengeTypesSet).join(', ') || 'N/A'
-    const challengeAttemptsPerEvent = eventsWithChallenges
-      .map((e) => (typeof e.challengeAttempts === 'number' ? String(e.challengeAttempts) : 'N/A'))
-      .join(', ') || 'N/A'
-    const challengeTypesPerEvent = eventsWithChallenges
-      .map((e) => (e.challengeType ? String(e.challengeType) : 'N/A'))
-      .join(', ') || 'N/A'
-    const challengeOutcomesPerEvent = eventsWithChallenges
-      .map((e) => (e.outcome ? String(e.outcome) : 'N/A'))
-      .join(', ') || 'N/A'
-
     emailCredentialDataMap[email.id] = {
+      emailOrder: email.__order,
+      credentialLinkKey: email.__credentialKey || 'N/A',
+      eventCount: matchingEvents.length,
       copyUsernameCount: copyUsernameEvents.length,
-      copyUsernameOutcomes: copyUsernameEvents.map((e) => e.outcome).filter((o) => o !== 'N/A'),
       copyPasswordCount: copyPasswordEvents.length,
       copyPasswordCompletedCount: completedCopyPasswordEvents.length,
-      copyPasswordTotalSeconds,
       copyPasswordAverageSeconds,
       copyPasswordDuration: formatSeconds(copyPasswordAverageSeconds),
       togglePasswordCount: togglePasswordEvents.length,
-      togglePasswordTotalSeconds,
-      togglePasswordAverageSeconds: togglePasswordEvents.length > 0 ? (togglePasswordTotalSeconds / togglePasswordEvents.length) : 0,
-      togglePasswordDuration: togglePasswordEvents.length > 0 ? formatSeconds(togglePasswordTotalSeconds / togglePasswordEvents.length) : 'N/A',
+      togglePasswordAverageSeconds:
+        togglePasswordEvents.length > 0 ? togglePasswordTotalSeconds / togglePasswordEvents.length : 0,
+      togglePasswordDuration:
+        togglePasswordEvents.length > 0
+          ? formatSeconds(togglePasswordTotalSeconds / togglePasswordEvents.length)
+          : 'N/A',
       hadChallenges: eventsWithChallenges.length > 0 ? 'Yes' : 'No',
       challengeCount: totalChallenges,
-      challengeTypes,
-      challengeTypesPerEvent,
-      challengeAttemptsPerEvent,
-      challengeOutcomesPerEvent,
+      challengeTypes: Array.from(challengeTypesSet).join(', ') || 'N/A',
       totalChallengeAttempts: totalAttempts,
-      togglePasswordOutcomes: togglePasswordEvents.map((e) => e.outcome).filter((o) => o !== 'N/A')
+      matchedEvents: matchingEvents
     }
   })
 
@@ -164,6 +239,10 @@ function buildDetailedEmailStatusRows(timelineEntries, passwordManagerCredential
 async function exportAdminDataToExcel() {
   const workbook = XLSX.utils.book_new()
   const passwordManagerCredentialCopyRows = await getPasswordManagerCredentialCopyRows()
+  const emailCredentialDataMap = buildDetailedEmailStatusRows(
+    timelineEntries.value,
+    passwordManagerCredentialCopyRows
+  )
 
   const completedCopyRows = passwordManagerCredentialCopyRows
     .filter((row) => row.outcome === 'completed' && typeof row.durationSeconds === 'number')
@@ -247,68 +326,63 @@ async function exportAdminDataToExcel() {
     }
   ]
 
-  const emailSectionRows = timelineEntries.value.map((item) => ({
-    Email_ID: item.id,
-    Is_an_attack: (typeof item.isAttack === 'boolean' ? item.isAttack : item.unsafe) ? 'true' : 'false',
-    is_email_opened: item.opened === true ? 'true' : 'false',
-    is_email_declared_unsafe: item.unsafe === true ? 'true' : 'false',
-    time_taken_to_declare_email_unsafe:
-      item.unsafe && typeof item.unsafeDecisionSeconds === 'number'
-        ? item.unsafeDecisionSeconds
-        : 'N/A'
-  }))
+  const emailSectionRows = timelineEntries.value.map((item, index) => {
+    const stats = emailCredentialDataMap[item.id] || {}
 
-  const pmTaskStatsMap = {}
-
-  passwordManagerCredentialCopyRows.forEach((row) => {
-    const pmTaskId = String(row.credentialLinkKey || row.website || row.accountId || 'N/A')
-    if (!pmTaskStatsMap[pmTaskId]) {
-      pmTaskStatsMap[pmTaskId] = {
-        PM_task_id: pmTaskId,
-        PM_copyUsernameAction_count: 0,
-        PM_copyPassword_count: 0,
-        PM_togglePassword_count: 0,
-        'PM-B_challenges_count': 0
-      }
-    }
-
-    if (row.actionType === 'copyUsername') {
-      pmTaskStatsMap[pmTaskId].PM_copyUsernameAction_count += 1
-    }
-
-    if (row.actionType === 'copyPassword') {
-      pmTaskStatsMap[pmTaskId].PM_copyPassword_count += 1
-    }
-
-    if (row.actionType === 'togglePassword') {
-      pmTaskStatsMap[pmTaskId].PM_togglePassword_count += 1
-    }
-
-    if (
-      row.managerMode === 'B' &&
-      row.challengeType &&
-      row.challengeType !== 'N/A'
-    ) {
-      pmTaskStatsMap[pmTaskId]['PM-B_challenges_count'] += 1
+    return {
+      Email_order: index + 1,
+      Group: item.groupLabel || 'N/A',
+      Email_ID: item.id,
+      Credential_link_key: stats.credentialLinkKey || getEmailCredentialKey(item) || 'N/A',
+      Is_an_attack: (typeof item.isAttack === 'boolean' ? item.isAttack : item.unsafe) ? 'true' : 'false',
+      is_email_opened: item.opened === true ? 'true' : 'false',
+      is_email_declared_unsafe: item.unsafe === true ? 'true' : 'false',
+      time_taken_to_declare_email_unsafe:
+        item.unsafe && typeof item.unsafeDecisionSeconds === 'number'
+          ? item.unsafeDecisionSeconds
+          : 'N/A',
+      PM_matched_events_count: stats.eventCount ?? 0,
+      PM_copyUsernameAction_count: stats.copyUsernameCount ?? 0,
+      PM_copyPassword_count: stats.copyPasswordCount ?? 0,
+      PM_togglePassword_count: stats.togglePasswordCount ?? 0,
+      PM_challenges_count: stats.challengeCount ?? 0,
+      PM_challenge_types: stats.challengeTypes || 'N/A'
     }
   })
 
-  const passwordManagerSectionRows = Object.values(pmTaskStatsMap)
+  const passwordManagerSectionRows = timelineEntries.value.map((item, index) => {
+    const stats = emailCredentialDataMap[item.id] || {}
+    return {
+      Email_order: index + 1,
+      Group: item.groupLabel || 'N/A',
+      Email_ID: item.id,
+      PM_task_id: stats.credentialLinkKey || getEmailCredentialKey(item) || 'N/A',
+      PM_copyUsernameAction_count: stats.copyUsernameCount ?? 0,
+      PM_copyPassword_count: stats.copyPasswordCount ?? 0,
+      PM_togglePassword_count: stats.togglePasswordCount ?? 0,
+      PM_B_challenges_count: stats.challengeCount ?? 0,
+      PM_challenge_types: stats.challengeTypes || 'N/A'
+    }
+  })
 
-  const challengeDetailRows = passwordManagerCredentialCopyRows
-    .filter(
-      (row) =>
-        row.managerMode === 'B' &&
-        row.challengeType &&
-        row.challengeType !== 'N/A'
-    )
-    .map((row) => ({
-      PM_task_id: String(row.credentialLinkKey || row.website || row.accountId || 'N/A'),
-      Challenge_type: row.challengeType,
-      Challenge_attempts: typeof row.challengeAttempts === 'number' ? row.challengeAttempts : 'N/A',
-      Challenge_outcome: row.outcome || 'N/A',
-      Challenge_time: typeof row.challengeDurationSeconds === 'number' ? row.challengeDurationSeconds : 'N/A'
-    }))
+  const challengeDetailRows = timelineEntries.value.flatMap((item, index) => {
+    const stats = emailCredentialDataMap[item.id]
+    const matchedEvents = stats?.matchedEvents || []
+
+    return matchedEvents
+      .filter((row) => row.managerMode === 'B' && row.challengeType && row.challengeType !== 'N/A')
+      .map((row) => ({
+        Email_order: index + 1,
+        Group: item.groupLabel || 'N/A',
+        Email_ID: item.id,
+        PM_task_id: stats?.credentialLinkKey || getEmailCredentialKey(item) || 'N/A',
+        Challenge_type: row.challengeType,
+        Challenge_attempts: typeof row.challengeAttempts === 'number' ? row.challengeAttempts : 'N/A',
+        Challenge_outcome: row.outcome || 'N/A',
+        Challenge_time:
+          typeof row.challengeDurationSeconds === 'number' ? row.challengeDurationSeconds : 'N/A'
+      }))
+  })
 
   const usabilitySheet = XLSX.utils.json_to_sheet(usabilityRows)
   const demographicSectionSheet = XLSX.utils.json_to_sheet(demographicSectionRows)
