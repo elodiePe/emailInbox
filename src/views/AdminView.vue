@@ -17,12 +17,24 @@ const {
   toggleTask,
   restartSimulation,
   initializeSimulation,
-  moveGroup
+  moveGroup,
+  setDeliveryPaused
 } = useSimulationStore()
 
 const showOnlyUnsafe = ref(false)
 const exportFileName = ref('simulation-export')
+const isSendingPaused = ref(false)
 const PM_API_BASE = String(import.meta.env.VITE_PASSWORD_MANAGER_API_URL || 'http://localhost:5000').replace(/\/+$/, '')
+
+function startSending() {
+  isSendingPaused.value = false
+  setDeliveryPaused(false)
+}
+
+function stopSending() {
+  isSendingPaused.value = true
+  setDeliveryPaused(true)
+}
 
 const displayedTimelineEntries = computed(() => {
   if (!showOnlyUnsafe.value) return timelineEntries.value
@@ -459,6 +471,17 @@ onMounted(() => {
 
     <section class="panel admin-actions-panel">
 
+      <div class="sending-control-section">
+        <h3>Email Delivery Control</h3>
+        <p class="sending-status" :class="{ paused: isSendingPaused }">
+          Status: <strong>{{ isSendingPaused ? 'PAUSED' : 'SENDING' }}</strong>
+        </p>
+        <div class="sending-button-group">
+          <button class="start-button" @click="startSending" :disabled="!isSendingPaused">Start Sending</button>
+          <button class="stop-button" @click="stopSending" :disabled="isSendingPaused">Stop Sending</button>
+        </div>
+      </div>
+
       <h3>Group Order</h3>
       <ul class="group-order-list">
         <li v-for="(group, index) in orderedGroups" :key="`order-${group.id}`" class="group-order-item">
@@ -497,3 +520,98 @@ onMounted(() => {
     </section>
   </main>
 </template>
+
+<style scoped>
+.sending-control-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f0f4f8;
+  border-radius: 8px;
+  border-left: 4px solid #0066cc;
+}
+
+.sending-control-section h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: #202124;
+}
+
+.sending-status {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.sending-status.paused {
+  color: #d32f2f;
+  font-weight: 600;
+}
+
+.sending-status strong {
+  font-weight: 700;
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.sending-status:not(.paused) strong {
+  background: #c8e6c9;
+  color: #1b5e20;
+}
+
+.sending-status.paused strong {
+  background: #ffcdd2;
+  color: #b71c1c;
+}
+
+.sending-button-group {
+  display: flex;
+  gap: 8px;
+}
+
+.start-button,
+.stop-button {
+  padding: 8px 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.start-button {
+  background: #4caf50;
+  color: white;
+  border-color: #388e3c;
+}
+
+.start-button:hover:not(:disabled) {
+  background: #45a049;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.start-button:disabled {
+  background: #e0e0e0;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.stop-button {
+  background: #f44336;
+  color: white;
+  border-color: #d32f2f;
+}
+
+.stop-button:hover:not(:disabled) {
+  background: #da190b;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.stop-button:disabled {
+  background: #e0e0e0;
+  color: #999;
+  cursor: not-allowed;
+}
+</style>
