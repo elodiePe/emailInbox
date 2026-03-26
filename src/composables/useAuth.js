@@ -1,8 +1,8 @@
 const AUTH_STORAGE_KEY = 'emailInboxAuth'
 
 // Update these two values to control who can access the app.
-const AUTH_USERNAME = 'admin'
-const AUTH_PASSWORD = 'inbox123'
+const AUTH_USERNAME = 'taylor.bacher.adm'
+const AUTH_PASSWORD = '123V2#kL9!pXq7Z'
 
 export function isAuthenticated() {
   return localStorage.getItem(AUTH_STORAGE_KEY) === 'true'
