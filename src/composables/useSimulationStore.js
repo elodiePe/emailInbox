@@ -187,7 +187,8 @@ const introActivatedAt = ref(simulationStartedAt)
 const groupActivationTime = ref({})
 const deliveredEmailIds = ref(new Set())
 const groupSequence = ref(schedule.groups.map((group) => group.id))
-const isDeliveryPaused = ref(false)
+const localDeliveryPaused = ref(false)
+const globalDeliveryPaused = ref(false)
 const currentSessionId = ref(DEFAULT_ROOM_KEY)
 
 const initialized = ref(false)
@@ -397,6 +398,7 @@ function applyStatePayload(parsed) {
   groupSequence.value = Array.isArray(parsed.groupSequence) && parsed.groupSequence.length > 0
     ? parsed.groupSequence.filter((id) => schedule.groups.some((group) => group.id === id))
     : schedule.groups.map((group) => group.id)
+  globalDeliveryPaused.value = parsed.globalDeliveryPaused === true
 
   const savedDelivered = new Set(Array.isArray(parsed.deliveredEmailIds) ? parsed.deliveredEmailIds : [])
   const deliveredFromInbox = new Set(
@@ -425,6 +427,7 @@ function buildStatePayload(revision) {
     groupActivationTime: groupActivationTime.value,
     deliveredEmailIds: Array.from(deliveredEmailIds.value),
     groupSequence: groupSequence.value,
+    globalDeliveryPaused: globalDeliveryPaused.value,
     _revision: revision
   }
 }
@@ -535,7 +538,7 @@ function isEmailDetailRouteActive() {
 }
 
 function maybeDeliverNextEmailInSequence(now) {
-  if (isDeliveryPaused.value) {
+  if (localDeliveryPaused.value || globalDeliveryPaused.value) {
     return false
   }
 
@@ -627,7 +630,13 @@ function clearSelectedEmail() {
 }
 
 function setDeliveryPaused(paused) {
-  isDeliveryPaused.value = paused === true
+  localDeliveryPaused.value = paused === true
+}
+
+function setGlobalDeliveryPaused(paused) {
+  globalDeliveryPaused.value = paused === true
+  saveState()
+  tickSimulation()
 }
 
 function toggleEmailUnsafe(instanceId, unsafe) {
@@ -661,7 +670,8 @@ function resetInMemoryState() {
   groupActivationTime.value = {}
   deliveredEmailIds.value = new Set()
   groupSequence.value = schedule.groups.map((group) => group.id)
-  isDeliveryPaused.value = false
+  localDeliveryPaused.value = false
+  globalDeliveryPaused.value = false
   localRevision.value = 0
 }
 
@@ -739,6 +749,8 @@ async function restartSimulation() {
   introActivatedAt.value = now
   groupActivationTime.value = {}
   deliveredEmailIds.value = new Set()
+  localDeliveryPaused.value = false
+  globalDeliveryPaused.value = false
 
   releaseNextGroupIfReady()
   tickSimulation()
@@ -877,6 +889,8 @@ function useSimulationStore() {
     selectEmail,
     clearSelectedEmail,
     setDeliveryPaused,
+    setGlobalDeliveryPaused,
+    globalDeliveryPaused,
     toggleEmailUnsafe,
     sendEmail,
     restartSimulation,

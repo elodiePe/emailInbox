@@ -18,22 +18,20 @@ const {
   restartSimulation,
   initializeSimulation,
   moveGroup,
-  setDeliveryPaused
+  setGlobalDeliveryPaused,
+  globalDeliveryPaused
 } = useSimulationStore()
 
 const showOnlyUnsafe = ref(false)
 const exportFileName = ref('simulation-export')
-const isSendingPaused = ref(false)
 const PM_API_BASE = String(import.meta.env.VITE_PASSWORD_MANAGER_API_URL || 'http://localhost:5000').replace(/\/+$/, '')
 
 function startSending() {
-  isSendingPaused.value = false
-  setDeliveryPaused(false)
+  setGlobalDeliveryPaused(false)
 }
 
 function stopSending() {
-  isSendingPaused.value = true
-  setDeliveryPaused(true)
+  setGlobalDeliveryPaused(true)
 }
 
 const displayedTimelineEntries = computed(() => {
@@ -473,12 +471,12 @@ onMounted(() => {
 
       <div class="sending-control-section">
         <h3>Email Delivery Control</h3>
-        <p class="sending-status" :class="{ paused: isSendingPaused }">
-          Status: <strong>{{ isSendingPaused ? 'PAUSED' : 'SENDING' }}</strong>
+        <p class="sending-status" :class="{ paused: globalDeliveryPaused }">
+          Status: <strong>{{ globalDeliveryPaused ? 'PAUSED' : 'SENDING' }}</strong>
         </p>
         <div class="sending-button-group">
-          <button class="start-button" @click="startSending" :disabled="!isSendingPaused">Start Sending</button>
-          <button class="stop-button" @click="stopSending" :disabled="isSendingPaused">Stop Sending</button>
+          <button class="start-button" @click="startSending" :disabled="!globalDeliveryPaused">Start Sending</button>
+          <button class="stop-button" @click="stopSending" :disabled="globalDeliveryPaused">Stop Sending</button>
         </div>
       </div>
 
