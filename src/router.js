@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import AdminView from './views/AdminView.vue'
 import InboxView from './views/InboxView.vue'
 import InboxEmailView from './views/InboxEmailView.vue'
+import StartExperimentView from './views/StartExperimentView.vue'
 import UsabilityView from './views/UsabilityView.vue'
 import LoginView from './views/LoginView.vue'
 import { isAuthenticated } from './composables/useAuth'
@@ -13,6 +14,12 @@ const router = createRouter({
       path: '/',
       name: 'inbox',
       component: InboxView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/start',
+      name: 'start-experiment',
+      component: StartExperimentView,
       meta: { requiresAuth: true }
     },
     {
@@ -56,7 +63,7 @@ router.beforeEach((to) => {
   }
 
   if (to.path === '/login' && isAuthenticated()) {
-    return '/'
+    return '/start'
   }
 
   return true

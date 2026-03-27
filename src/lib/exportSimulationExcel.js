@@ -1,49 +1,20 @@
-<script setup>
-import { computed, onMounted, ref } from 'vue'
 import * as XLSX from 'xlsx'
-import { useSimulationStore } from '../composables/useSimulationStore'
 
-const {
-  currentSessionId,
-  groupOrder,
-  orderedGroups,
-  allTasksByGroup,
-  unlockedGroups,
-  timelineEntries,
-  completedTasks,
-  usabilityQuestions,
-  usabilityResponses,
-  demographicData,
-  toggleTask,
-  restartSimulation,
-  initializeSimulation,
-  moveGroup,
-  setGlobalDeliveryPaused,
-  globalDeliveryPaused
-} = useSimulationStore()
-
-const showOnlyUnsafe = ref(false)
-const exportFileName = ref('simulation-export')
 const PM_API_BASE = String(import.meta.env.VITE_PASSWORD_MANAGER_API_URL || 'http://localhost:5000').replace(/\/+$/, '')
 const PM_CREDENTIAL_COPY_LOG_KEY_PREFIX = 'pm-study-credential-copy'
 const PM_PAGE_SESSION_LOG_KEY_PREFIX = 'pm-study-password-page-session'
-const importedCredentialCopyRows = ref([])
-const importedPageSessionRows = ref([])
-const pmImportMessage = ref('')
 
-function startSending() {
-  setGlobalDeliveryPaused(false)
-}
+function formatSeconds(value) {
+  if (typeof value !== 'number') return 'N/A'
+  const total = Math.max(0, value)
+  const minutes = Math.floor(total / 60)
+  const seconds = total - minutes * 60
 
-function stopSending() {
-  setGlobalDeliveryPaused(true)
-}
+  if (Number.isInteger(total)) {
+    return `${minutes}:${String(seconds).padStart(2, '0')}`
+  }
 
-async function handleFullReset() {
-  importedCredentialCopyRows.value = []
-  importedPageSessionRows.value = []
-  pmImportMessage.value = ''
-  await restartSimulation()
+  return `${minutes}:${seconds.toFixed(3).padStart(6, '0')}`
 }
 
 function readAllLocalRowsByPrefix(prefix) {
@@ -67,51 +38,36 @@ function readAllLocalRowsByPrefix(prefix) {
   return rows
 }
 
-async function handlePmStudyImport(event) {
-  const file = event?.target?.files?.[0]
-  if (!file) return
-
-  try {
-    const text = await file.text()
-    const parsed = JSON.parse(text)
-
-    const importedCopy = Array.isArray(parsed?.credentialCopy) ? parsed.credentialCopy : []
-    const importedSessions = Array.isArray(parsed?.passwordPageSessions) ? parsed.passwordPageSessions : []
-
-    importedCredentialCopyRows.value = importedCopy
-    importedPageSessionRows.value = importedSessions
-    pmImportMessage.value = `Imported PM logs: ${importedCopy.length} credential events, ${importedSessions.length} page sessions.`
-  } catch {
-    importedCredentialCopyRows.value = []
-    importedPageSessionRows.value = []
-    pmImportMessage.value = 'Failed to import PM log file. Please select a valid JSON export from Password Manager.'
-  }
-
-  event.target.value = ''
+function normalizeCredentialKey(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
 }
 
-const displayedTimelineEntries = computed(() => {
-  if (!showOnlyUnsafe.value) return timelineEntries.value
-  return timelineEntries.value.filter((item) => item.unsafe)
-})
-
-function formatSeconds(value) {
-  if (typeof value !== 'number') return 'N/A'
-  const total = Math.max(0, value)
-  const minutes = Math.floor(total / 60)
-  const seconds = total - minutes * 60
-
-  if (Number.isInteger(total)) {
-    return `${minutes}:${String(seconds).padStart(2, '0')}`
-  }
-
-  return `${minutes}:${seconds.toFixed(3).padStart(6, '0')}`
+function getEmailCredentialKey(email) {
+  return normalizeCredentialKey(email.linkedCredentialKey || email.linkedCredentialWebsite)
 }
 
-async function getPasswordManagerCredentialCopyRows() {
+function getEventCredentialKey(event) {
+  return normalizeCredentialKey(event.credentialLinkKey)
+}
+
+function getEventTimestampMs(event) {
+  if (typeof event.requestedAtMs === 'number') return event.requestedAtMs
+  if (typeof event.completedAtMs === 'number') return event.completedAtMs
+  return null
+}
+
+function getEmailStartMs(email) {
+  if (typeof email.openedAtMs === 'number') return email.openedAtMs
+  if (typeof email.receivedAtMs === 'number') return email.receivedAtMs
+  return null
+}
+
+async function getPasswordManagerCredentialCopyRows(currentSessionId) {
   const mapStudyRows = (rows) => rows.map((row, index) => ({
     index: index + 1,
-    sessionId: row.sessionId || currentSessionId.value,
+    sessionId: row.sessionId || currentSessionId,
     managerMode: row.managerMode || 'unknown',
     website: row.website || 'N/A',
     credentialLinkKey: row.credentialLinkKey || 'N/A',
@@ -131,13 +87,8 @@ async function getPasswordManagerCredentialCopyRows() {
   }))
 
   const getLocalRows = () => {
-    const importedForSession = importedCredentialCopyRows.value.filter(
-      (row) => String(row.sessionId || currentSessionId.value) === currentSessionId.value,
-    )
-    if (importedForSession.length > 0) return importedForSession
-
     try {
-      const storageKey = `${PM_CREDENTIAL_COPY_LOG_KEY_PREFIX}:${currentSessionId.value}`
+      const storageKey = `${PM_CREDENTIAL_COPY_LOG_KEY_PREFIX}:${currentSessionId}`
       const parsed = JSON.parse(window.localStorage.getItem(storageKey) || '[]')
       if (Array.isArray(parsed) && parsed.length > 0) return parsed
       return readAllLocalRowsByPrefix(PM_CREDENTIAL_COPY_LOG_KEY_PREFIX)
@@ -147,7 +98,7 @@ async function getPasswordManagerCredentialCopyRows() {
   }
 
   try {
-    const url = `${PM_API_BASE}/api/study/credential-copy?sessionId=${encodeURIComponent(currentSessionId.value)}`
+    const url = `${PM_API_BASE}/api/study/credential-copy?sessionId=${encodeURIComponent(currentSessionId)}`
     const response = await fetch(url)
     if (!response.ok) return mapStudyRows(getLocalRows())
 
@@ -160,7 +111,7 @@ async function getPasswordManagerCredentialCopyRows() {
   }
 }
 
-async function getPasswordManagerPageSessionRows() {
+async function getPasswordManagerPageSessionRows(currentSessionId) {
   const mapStudyRows = (rows) => rows.map((row, index) => {
     const startedAtMs = typeof row.startedAtMs === 'number' ? row.startedAtMs : null
     const endedAtMs = typeof row.endedAtMs === 'number' ? row.endedAtMs : null
@@ -171,7 +122,7 @@ async function getPasswordManagerPageSessionRows() {
 
     return {
       index: index + 1,
-      sessionId: row.sessionId || currentSessionId.value,
+      sessionId: row.sessionId || currentSessionId,
       managerMode: row.managerMode || 'unknown',
       website: row.website || 'N/A',
       accountId: row.accountId || 'N/A',
@@ -186,13 +137,8 @@ async function getPasswordManagerPageSessionRows() {
   })
 
   const getLocalRows = () => {
-    const importedForSession = importedPageSessionRows.value.filter(
-      (row) => String(row.sessionId || currentSessionId.value) === currentSessionId.value,
-    )
-    if (importedForSession.length > 0) return importedForSession
-
     try {
-      const storageKey = `${PM_PAGE_SESSION_LOG_KEY_PREFIX}:${currentSessionId.value}`
+      const storageKey = `${PM_PAGE_SESSION_LOG_KEY_PREFIX}:${currentSessionId}`
       const parsed = JSON.parse(window.localStorage.getItem(storageKey) || '[]')
       if (Array.isArray(parsed) && parsed.length > 0) return parsed
       return readAllLocalRowsByPrefix(PM_PAGE_SESSION_LOG_KEY_PREFIX)
@@ -202,7 +148,7 @@ async function getPasswordManagerPageSessionRows() {
   }
 
   try {
-    const url = `${PM_API_BASE}/api/study/password-page-session?sessionId=${encodeURIComponent(currentSessionId.value)}`
+    const url = `${PM_API_BASE}/api/study/password-page-session?sessionId=${encodeURIComponent(currentSessionId)}`
     const response = await fetch(url)
     if (!response.ok) return mapStudyRows(getLocalRows())
 
@@ -213,33 +159,6 @@ async function getPasswordManagerPageSessionRows() {
   } catch {
     return mapStudyRows(getLocalRows())
   }
-}
-
-function normalizeCredentialKey(value) {
-  return String(value || '')
-    .trim()
-    .toLowerCase()
-}
-
-function getEmailCredentialKey(email) {
-  // Prefer explicit key when provided, fallback to legacy field.
-  return normalizeCredentialKey(email.linkedCredentialKey || email.linkedCredentialWebsite)
-}
-
-function getEventCredentialKey(event) {
-  return normalizeCredentialKey(event.credentialLinkKey)
-}
-
-function getEventTimestampMs(event) {
-  if (typeof event.requestedAtMs === 'number') return event.requestedAtMs
-  if (typeof event.completedAtMs === 'number') return event.completedAtMs
-  return null
-}
-
-function getEmailStartMs(email) {
-  if (typeof email.openedAtMs === 'number') return email.openedAtMs
-  if (typeof email.receivedAtMs === 'number') return email.receivedAtMs
-  return null
 }
 
 function buildDetailedEmailStatusRows(timelineEntries, passwordManagerCredentialCopyRows) {
@@ -308,8 +227,6 @@ function buildDetailedEmailStatusRows(timelineEntries, passwordManagerCredential
   emailsWithOrder.forEach((email) => {
     let matchingEvents = emailBuckets[email.id] || []
 
-    // If multiple emails intentionally reuse the same credential key,
-    // expose key-level PM activity on each related row so attacks are not dropped.
     if (matchingEvents.length === 0 && email.__credentialKey && (emailCountByKey[email.__credentialKey] || 0) > 1) {
       matchingEvents = eventsByKey.get(email.__credentialKey) || []
     }
@@ -317,25 +234,8 @@ function buildDetailedEmailStatusRows(timelineEntries, passwordManagerCredential
     const copyUsernameEvents = matchingEvents.filter((e) => e.actionType === 'copyUsername')
     const copyPasswordEvents = matchingEvents.filter((e) => e.actionType === 'copyPassword')
     const togglePasswordEvents = matchingEvents.filter((e) => e.actionType === 'togglePassword')
-    const completedCopyPasswordEvents = copyPasswordEvents.filter((e) => e.outcome === 'completed')
-
-    const copyPasswordTotalSeconds = completedCopyPasswordEvents.reduce((sum, e) => {
-      const duration = typeof e.durationSeconds === 'number' ? e.durationSeconds : 0
-      return sum + duration
-    }, 0)
-
-    const copyPasswordAverageSeconds =
-      completedCopyPasswordEvents.length > 0
-        ? copyPasswordTotalSeconds / completedCopyPasswordEvents.length
-        : 0
-
-    const togglePasswordTotalSeconds = togglePasswordEvents.reduce((sum, e) => {
-      const duration = typeof e.durationSeconds === 'number' ? e.durationSeconds : 0
-      return sum + duration
-    }, 0)
 
     const eventsWithChallenges = matchingEvents.filter((e) => e.challengeType && e.challengeType !== 'N/A')
-
     const challengeTypesSet = new Set()
     let totalAttempts = 0
     let totalChallenges = 0
@@ -354,17 +254,7 @@ function buildDetailedEmailStatusRows(timelineEntries, passwordManagerCredential
       eventCount: matchingEvents.length,
       copyUsernameCount: copyUsernameEvents.length,
       copyPasswordCount: copyPasswordEvents.length,
-      copyPasswordCompletedCount: completedCopyPasswordEvents.length,
-      copyPasswordAverageSeconds,
-      copyPasswordDuration: formatSeconds(copyPasswordAverageSeconds),
       togglePasswordCount: togglePasswordEvents.length,
-      togglePasswordAverageSeconds:
-        togglePasswordEvents.length > 0 ? togglePasswordTotalSeconds / togglePasswordEvents.length : 0,
-      togglePasswordDuration:
-        togglePasswordEvents.length > 0
-          ? formatSeconds(togglePasswordTotalSeconds / togglePasswordEvents.length)
-          : 'N/A',
-      hadChallenges: eventsWithChallenges.length > 0 ? 'Yes' : 'No',
       challengeCount: totalChallenges,
       challengeTypes: Array.from(challengeTypesSet).join(', ') || 'N/A',
       totalChallengeAttempts: totalAttempts,
@@ -375,28 +265,22 @@ function buildDetailedEmailStatusRows(timelineEntries, passwordManagerCredential
   return emailCredentialDataMap
 }
 
-async function exportAdminDataToExcel() {
+async function exportSimulationDataToExcel({
+  currentSessionId,
+  timelineEntries,
+  orderedGroups,
+  usabilityQuestions,
+  usabilityResponses,
+  demographicData,
+  exportFileName = 'simulation-export'
+}) {
   const workbook = XLSX.utils.book_new()
-  const passwordManagerCredentialCopyRows = await getPasswordManagerCredentialCopyRows()
-  const passwordManagerPageSessionRows = await getPasswordManagerPageSessionRows()
-  const emailCredentialDataMap = buildDetailedEmailStatusRows(
-    timelineEntries.value,
-    passwordManagerCredentialCopyRows
-  )
-
-  const completedCopyRows = passwordManagerCredentialCopyRows
-    .filter((row) => row.outcome === 'completed' && typeof row.durationSeconds === 'number')
-
-
-  const answeredCount = usabilityQuestions.filter((question) => {
-    const score = usabilityResponses.value[question.id]
-    const minScale = Number.isInteger(question.minScale) ? question.minScale : 1
-    const maxScale = Number.isInteger(question.maxScale) ? question.maxScale : 5
-    return Number.isInteger(score) && score >= minScale && score <= maxScale
-  }).length
+  const passwordManagerCredentialCopyRows = await getPasswordManagerCredentialCopyRows(currentSessionId)
+  await getPasswordManagerPageSessionRows(currentSessionId)
+  const emailCredentialDataMap = buildDetailedEmailStatusRows(timelineEntries, passwordManagerCredentialCopyRows)
 
   const usabilityRows = usabilityQuestions.map((question, index) => {
-    const score = usabilityResponses.value[question.id]
+    const score = usabilityResponses[question.id]
     const minScale = Number.isInteger(question.minScale) ? question.minScale : 1
     const maxScale = Number.isInteger(question.maxScale) ? question.maxScale : 5
     const answered = Number.isInteger(score) && score >= minScale && score <= maxScale
@@ -413,7 +297,6 @@ async function exportAdminDataToExcel() {
       answered: answered ? 'Yes' : 'No'
     }
   })
-
 
   const participantPmGroup = (() => {
     const modeCounts = passwordManagerCredentialCopyRows.reduce((acc, row) => {
@@ -446,7 +329,7 @@ async function exportAdminDataToExcel() {
       'group-3': 'C'
     }
 
-    const letters = orderedGroups.value
+    const letters = orderedGroups
       .map((group) => letterByGroupId[group.id] || '')
       .filter((value) => value)
 
@@ -455,18 +338,18 @@ async function exportAdminDataToExcel() {
 
   const demographicSectionRows = [
     {
-      Participant_ID: currentSessionId.value,
-      Participant_gender: demographicData.value.gender || 'N/A',
-      Participant_age: demographicData.value.age || 'N/A',
-      Participant_levelOfEducation: demographicData.value.educationLevel || 'N/A',
-      Participant_englishLevel: demographicData.value.englishLevel || 'N/A',
-      Participant_ITLevel: demographicData.value.itBackground || 'N/A',
+      Participant_ID: currentSessionId,
+      Participant_gender: demographicData.gender || 'N/A',
+      Participant_age: demographicData.age || 'N/A',
+      Participant_levelOfEducation: demographicData.educationLevel || 'N/A',
+      Participant_englishLevel: demographicData.englishLevel || 'N/A',
+      Participant_ITLevel: demographicData.itBackground || 'N/A',
       Participant_PMGroup: participantPmGroup,
       Participant_EmailsOrder: participantEmailsOrder
     }
   ]
 
-  const emailSectionRows = timelineEntries.value.map((item, index) => {
+  const emailSectionRows = timelineEntries.map((item, index) => {
     const stats = emailCredentialDataMap[item.id] || {}
 
     return {
@@ -490,7 +373,7 @@ async function exportAdminDataToExcel() {
     }
   })
 
-  const passwordManagerSectionRows = timelineEntries.value.map((item, index) => {
+  const passwordManagerSectionRows = timelineEntries.map((item, index) => {
     const stats = emailCredentialDataMap[item.id] || {}
     return {
       Email_order: index + 1,
@@ -505,7 +388,7 @@ async function exportAdminDataToExcel() {
     }
   })
 
-  const challengeDetailRows = timelineEntries.value.flatMap((item, index) => {
+  const challengeDetailRows = timelineEntries.flatMap((item, index) => {
     const stats = emailCredentialDataMap[item.id]
     const matchedEvents = stats?.matchedEvents || []
 
@@ -536,7 +419,7 @@ async function exportAdminDataToExcel() {
   XLSX.utils.book_append_sheet(workbook, passwordManagerSectionSheet, 'Password Manager')
   XLSX.utils.book_append_sheet(workbook, challengeDetailSheet, 'PM Challenges')
 
-  const cleanedName = String(exportFileName.value || '')
+  const cleanedName = String(exportFileName || '')
     .trim()
     .replace(/[\\/:*?"<>|]/g, '-')
     .replace(/\s+/g, '-')
@@ -546,202 +429,4 @@ async function exportAdminDataToExcel() {
   XLSX.writeFileXLSX(workbook, fileName)
 }
 
-onMounted(() => {
-  initializeSimulation()
-})
-</script>
-
-<template>
-  <main class="admin-layout">
-    <section class="panel admin-timeline-panel">
-      <div class="admin-timeline-head">
-        <h2>Simulation Timeline</h2>
-        <label class="unsafe-filter-toggle">
-          <input type="checkbox" v-model="showOnlyUnsafe" />
-          <span>Only unsafe</span>
-        </label>
-      </div>
-      <ul class="timeline-list">
-        <li
-          v-for="item in displayedTimelineEntries"
-          :key="item.emailKey"
-          class="timeline-item"
-          :class="{
-            'is-unsafe': item.unsafe,
-            'is-task-done': item.taskId && item.taskDone,
-            'is-opened': item.opened && !(item.taskId && item.taskDone),
-            'is-sent': item.delivered && !item.opened && !(item.taskId && item.taskDone),
-            'is-pending': !item.delivered
-          }"
-        >
-          <p class="subject">{{ item.groupLabel }} • {{ item.subject }}</p>
-          <div class="timeline-status-row">
-            <span class="timeline-badge" :class="item.delivered ? 'sent-done' : 'sent-pending'">
-              Sent: {{ item.delivered ? 'Yes' : 'No' }}
-            </span>
-            <span class="timeline-badge" :class="item.opened ? 'opened-done' : 'opened-pending'">
-              Opened: {{ item.opened ? 'Yes' : 'No' }}
-            </span>
-            <span class="timeline-badge" :class="item.unsafe ? 'unsafe-done' : 'unsafe-pending'">
-              Unsafe: {{ item.unsafe ? 'Yes' : 'No' }}
-            </span>
-            <span class="timeline-badge" :class="item.unsafe ? 'unsafe-time' : 'unsafe-time-pending'">
-              Time from open: {{ formatSeconds(item.unsafeDecisionSeconds) }}
-            </span>
-            <span v-if="item.taskId" class="timeline-badge" :class="item.taskDone ? 'task-done' : 'task-pending'">
-              Task: {{ item.taskDone ? 'Done' : 'Pending' }}
-            </span>
-          </div>
-        </li>
-        <li v-if="displayedTimelineEntries.length === 0" class="empty">No timeline emails for this filter.</li>
-      </ul>
-    </section>
-
-    <section class="panel admin-actions-panel">
-
-      <div class="sending-control-section">
-        <h3>Email Delivery Control</h3>
-        <p class="sending-status" :class="{ paused: globalDeliveryPaused }">
-          Status: <strong>{{ globalDeliveryPaused ? 'PAUSED' : 'SENDING' }}</strong>
-        </p>
-        <div class="sending-button-group">
-          <button class="start-button" @click="startSending" :disabled="!globalDeliveryPaused">Start Sending</button>
-          <button class="stop-button" @click="stopSending" :disabled="globalDeliveryPaused">Stop Sending</button>
-        </div>
-      </div>
-
-     
-
-      <h3>Group Order</h3>
-      <ul class="group-order-list">
-        <li v-for="(group, index) in orderedGroups" :key="`order-${group.id}`" class="group-order-item">
-          <span>{{ index + 1 }}. {{ group.label }}</span>
-          <div class="group-order-actions">
-            <button @click="moveGroup(group.id, 'up')" :disabled="index === 0">Up</button>
-            <button @click="moveGroup(group.id, 'down')" :disabled="index === orderedGroups.length - 1">Down</button>
-          </div>
-        </li>
-      </ul>
-
-      <!-- <div v-for="group in groupOrder" :key="`admin-${group.id}`" class="group-block">
-        <h3>
-          {{ group.label }}
-          <span class="status" :class="{ unlocked: unlockedGroups[group.id] || group.id === 'intro' }">
-            {{ group.id === 'intro' ? 'Active' : unlockedGroups[group.id] ? 'Unlocked' : 'Locked' }}
-          </span>
-        </h3>
-        <label v-for="task in allTasksByGroup[group.id]" :key="`admin-${task.taskId}`" class="task-row">
-          <input
-            type="checkbox"
-            :checked="completedTasks[task.taskId] === true"
-            @change="toggleTask(task.taskId, $event.target.checked)"
-          />
-          <span>{{ task.label }}</span>
-        </label>
-      </div> -->
-
-      <label class="export-name-field">
-        Excel filename
-        <input v-model="exportFileName" type="text" placeholder="simulation-export" />
-      </label>
-
-      <button class="export-button" @click="exportAdminDataToExcel">Export to Excel</button>
-      <button class="reset-button" @click="handleFullReset">Clear localStorage + Restart Timeline</button>
-    </section>
-  </main>
-</template>
-
-<style scoped>
-.sending-control-section {
-  margin-bottom: 24px;
-  padding: 16px;
-  background: #f0f4f8;
-  border-radius: 8px;
-  border-left: 4px solid #0066cc;
-}
-
-.sending-control-section h3 {
-  margin: 0 0 12px 0;
-  font-size: 16px;
-  color: #202124;
-}
-
-.sending-status {
-  margin: 0 0 12px 0;
-  font-size: 14px;
-  color: #555;
-}
-
-.sending-status.paused {
-  color: #d32f2f;
-  font-weight: 600;
-}
-
-.sending-status strong {
-  font-weight: 700;
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-
-.sending-status:not(.paused) strong {
-  background: #c8e6c9;
-  color: #1b5e20;
-}
-
-.sending-status.paused strong {
-  background: #ffcdd2;
-  color: #b71c1c;
-}
-
-.sending-button-group {
-  display: flex;
-  gap: 8px;
-}
-
-.start-button,
-.stop-button {
-  padding: 8px 16px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background: #fff;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.start-button {
-  background: #4caf50;
-  color: white;
-  border-color: #388e3c;
-}
-
-.start-button:hover:not(:disabled) {
-  background: #45a049;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-.start-button:disabled {
-  background: #e0e0e0;
-  color: #999;
-  cursor: not-allowed;
-}
-
-.stop-button {
-  background: #f44336;
-  color: white;
-  border-color: #d32f2f;
-}
-
-.stop-button:hover:not(:disabled) {
-  background: #da190b;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-.stop-button:disabled {
-  background: #e0e0e0;
-  color: #999;
-  cursor: not-allowed;
-}
-</style>
+export { exportSimulationDataToExcel }

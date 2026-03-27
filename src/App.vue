@@ -3,8 +3,20 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { useSimulationStore } from './composables/useSimulationStore'
 import { isAuthenticated, logout } from './composables/useAuth'
+import { exportSimulationDataToExcel } from './lib/exportSimulationExcel'
 
-const { initializeSimulation, currentSessionId, switchSession, syncStatus, syncMessage } = useSimulationStore()
+const {
+  initializeSimulation,
+  currentSessionId,
+  switchSession,
+  syncStatus,
+  syncMessage,
+  timelineEntries,
+  orderedGroups,
+  usabilityQuestions,
+  usabilityResponses,
+  demographicData
+} = useSimulationStore()
 const sessionInput = ref('')
 const route = useRoute()
 
@@ -15,7 +27,24 @@ function joinSession() {
   void switchSession(sessionInput.value)
 }
 
-function signOut() {
+async function signOut() {
+  const shouldSignOut = window.confirm('Are you sure you want to sign out?')
+  if (!shouldSignOut) return
+
+  try {
+    await exportSimulationDataToExcel({
+      currentSessionId: currentSessionId.value,
+      timelineEntries: timelineEntries.value,
+      orderedGroups: orderedGroups.value,
+      usabilityQuestions,
+      usabilityResponses: usabilityResponses.value,
+      demographicData: demographicData.value,
+      exportFileName: 'simulation-export'
+    })
+  } catch {
+    // Keep sign-out resilient even if export fails.
+  }
+
   logout()
   window.location.assign('#/login')
 }

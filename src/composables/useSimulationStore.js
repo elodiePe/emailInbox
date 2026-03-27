@@ -7,6 +7,7 @@ const SESSION_STORAGE_KEY = 'email-simulation-active-session'
 const CLOUD_TABLE = 'simulation_state'
 const CLOUD_POLL_MS = 4000
 const EMAIL_AUTO_ADVANCE_MS = 7000
+const INITIAL_FIRST_EMAIL_DELAY_MS = 7000
 const DEFAULT_ROOM_KEY = import.meta.env.VITE_SIMULATION_ROOM || 'default'
 
 const selectedEmailId = ref(null)
@@ -542,6 +543,13 @@ function maybeDeliverNextEmailInSequence(now) {
     return false
   }
 
+  if (deliveredEmailIds.value.size === 0) {
+    const elapsedSinceStart = now - introActivatedAt.value
+    if (elapsedSinceStart < INITIAL_FIRST_EMAIL_DELAY_MS) {
+      return false
+    }
+  }
+
   if (selectedEmailId.value || isEmailDetailRouteActive()) {
     return false
   }
@@ -698,7 +706,17 @@ async function restartSimulation() {
   // Clean up password manager study data (but keep passwords)
   const PM_API_BASE = String(import.meta.env.VITE_PASSWORD_MANAGER_API_URL || 'http://localhost:5000').replace(/\/+$/, '')
   const PM_FRICTION_LOG_KEY_PREFIX = 'pm-positive-friction-log'
+  const PM_CREDENTIAL_COPY_LOG_KEY_PREFIX = 'pm-study-credential-copy'
+  const PM_PAGE_SESSION_LOG_KEY_PREFIX = 'pm-study-password-page-session'
   const sessionId = currentSessionId.value
+
+  const clearLocalStorageByPrefix = (prefix) => {
+    Object.keys(window.localStorage)
+      .filter((key) => key.startsWith(`${prefix}:`))
+      .forEach((key) => {
+        window.localStorage.removeItem(key)
+      })
+  }
 
   try {
     // Delete all credential copy events for this session
@@ -718,9 +736,10 @@ async function restartSimulation() {
     console.warn('Failed to delete password page sessions:', err)
   }
 
-  // Clear password manager localStorage challenge logs
-  const frictionLogKey = `${PM_FRICTION_LOG_KEY_PREFIX}:${sessionId}`
-  window.localStorage.removeItem(frictionLogKey)
+  // Clear password manager local study/challenge logs for all sessions.
+  clearLocalStorageByPrefix(PM_FRICTION_LOG_KEY_PREFIX)
+  clearLocalStorageByPrefix(PM_CREDENTIAL_COPY_LOG_KEY_PREFIX)
+  clearLocalStorageByPrefix(PM_PAGE_SESSION_LOG_KEY_PREFIX)
 
   // Also clear challenge index
   window.sessionStorage.removeItem('pm.challenge.index')

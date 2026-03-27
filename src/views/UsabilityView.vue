@@ -12,6 +12,7 @@ const {
 } = useSimulationStore()
 
 const activeQuestionIndex = ref(0)
+const isFinished = ref(false)
 
 function getQuestionScaleBounds(question) {
   if (!question) return { min: 1, max: 5 }
@@ -64,6 +65,36 @@ const currentScaleValues = computed(() => {
   return Array.from({ length: max - min + 1 }, (_, index) => min + index)
 })
 
+const currentQuestionGuidance = computed(() => {
+  const question = currentQuestion.value
+  if (!question) {
+    return {
+      title: 'How to answer',
+      instruction: 'Select one option that best matches your opinion.'
+    }
+  }
+
+  if (question.instrument === 'SUS') {
+    return {
+      title: 'SUS item (agreement scale)',
+      instruction: 'Rate your agreement from 1 (Strongly disagree) to 5 (Strongly agree), based on your Password Manager experience.'
+    }
+  }
+
+  if (question.instrument === 'UEQ-S') {
+    return {
+      title: 'UEQ-S item (semantic scale)',
+      instruction: 'Pick the number that best reflects your position between the left and right words, based on your Password Manager experience.'
+    }
+  }
+
+  const { min, max } = getQuestionScaleBounds(question)
+  return {
+    title: 'Question item',
+    instruction: `Select one value between ${min} and ${max}.`
+  }
+})
+
 function goToQuestion(index) {
   if (index < 0 || index >= usabilityQuestions.length) return
   activeQuestionIndex.value = index
@@ -81,6 +112,10 @@ function updateDemographic(field, value) {
   setDemographicField(field, value)
 }
 
+function finishQuestionnaire() {
+  isFinished.value = true
+}
+
 watch(firstUnansweredIndex, (index) => {
   if (answeredCount.value === 0) {
     activeQuestionIndex.value = 0
@@ -95,11 +130,16 @@ onMounted(() => {
 </script>
 
 <template>
-  <main class="usability-layout">
+  <main v-if="isFinished" class="finish-screen">
+    <p class="finish-screen-text">THE EXPERIEMENT IS FINISHED. THANK YOU FOR YOUR PARTICIPATION</p>
+  </main>
+
+  <main v-else class="usability-layout">
     <section class="panel usability-panel">
       <div class="usability-header">
-        <h2>Usability Questionnaire</h2>
-        <p class="meta">SUS (1-5 agreement) followed by UEQ-S (1-7 semantic scale)</p>
+        <h2>Questionnaire</h2>
+        <!-- <p class="meta">SUS (1-5 agreement) followed by UEQ-S (1-7 semantic scale)</p> -->
+        <p class="meta">Please answer all questions based on your experience using the Password Manager.</p>
         <p class="meta">Answered: {{ answeredCount }} / {{ usabilityQuestions.length }}</p>
         <p v-if="isComplete" class="meta">Questionnaire complete.</p>
       </div>
@@ -177,9 +217,9 @@ onMounted(() => {
         </label>
       </section>
 
-      <p v-else class="meta">Demographic data appears after you complete all usability questions.</p>
+      <!-- <p v-else class="meta">Demographic data appears after you complete all usability questions.</p> -->
 
-      <ol class="usability-progress-list">
+      <ol v-if="!isComplete" class="usability-progress-list">
         <li
           v-for="(question, index) in usabilityQuestions"
           :key="question.id"
@@ -194,15 +234,26 @@ onMounted(() => {
         </li>
       </ol>
 
-      <div v-if="currentQuestion" class="usability-question-stage">
+      <div v-if="!isComplete && currentQuestion" class="usability-question-stage">
         <article class="usability-question-card" :class="{ answered: isAnswered(currentQuestion.id) }">
           <p class="usability-question-number">Question {{ activeQuestionIndex + 1 }} / {{ usabilityQuestions.length }}</p>
           <p class="usability-question-instrument">{{ currentQuestion.instrument }}</p>
+
+          <div class="question-guidance">
+            <p class="question-guidance-title">{{ currentQuestionGuidance.title }}</p>
+            <p class="question-guidance-text">{{ currentQuestionGuidance.instruction }}</p>
+          </div>
+
           <p class="usability-question-text">{{ currentQuestion.text }}</p>
 
           <div v-if="currentQuestion.leftLabel && currentQuestion.rightLabel" class="semantic-scale-labels">
             <span>{{ currentQuestion.leftLabel }}</span>
             <span>{{ currentQuestion.rightLabel }}</span>
+          </div>
+
+          <div v-else-if="currentQuestion.instrument === 'SUS'" class="semantic-scale-labels">
+            <span>Strongly disagree</span>
+            <span>Strongly agree</span>
           </div>
 
           <div class="likert-options centered" role="radiogroup" :aria-label="currentQuestion.text">
@@ -222,6 +273,11 @@ onMounted(() => {
             </label>
           </div>
         </article>
+      </div>
+
+      <div v-if="isComplete" class="finish-actions">
+        <button v-if="!isFinished" class="finish-btn" @click="finishQuestionnaire">Finish</button>
+        <p v-else class="meta">Questionnaire submitted. Thank you.</p>
       </div>
     </section>
   </main>
@@ -271,5 +327,60 @@ onMounted(() => {
   margin-bottom: 0.45rem;
   font-size: 0.82rem;
   color: #5f6d7a;
+}
+
+.question-guidance {
+  margin: 0.45rem 0 0.65rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #d8e1eb;
+  background: #f7fbff;
+  border-radius: 6px;
+}
+
+.question-guidance-title {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #35506b;
+}
+
+.question-guidance-text {
+  margin: 0.2rem 0 0;
+  font-size: 0.82rem;
+  color: #5f6d7a;
+}
+
+.finish-actions {
+  margin-top: 0.9rem;
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+}
+
+.finish-btn {
+  border: none;
+  border-radius: 6px;
+  background: #0a5dca;
+  color: #ffffff;
+  padding: 0.55rem 1.2rem;
+  cursor: pointer;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.finish-screen {
+  min-height: calc(100vh - 80px);
+  background: #ffffff;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.finish-screen-text {
+  margin: 0;
+  text-align: center;
+  color: #111111;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 </style>

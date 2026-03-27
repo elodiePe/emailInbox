@@ -18,7 +18,7 @@ function submitLogin() {
     return
   }
 
-  const redirectPath = typeof route.query.redirect === 'string' ? route.query.redirect : '/'
+  const redirectPath = typeof route.query.redirect === 'string' ? route.query.redirect : '/start'
   router.replace(redirectPath)
 }
 </script>
