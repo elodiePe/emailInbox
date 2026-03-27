@@ -22,6 +22,7 @@ async function startExperiment() {
 
 <template>
   <main class="start-experiment">
+    <p class="paragraphStart">The first email will take a few seconds to arrive, use this time to familiarize yourself with the mailbox and password manager interfaces.</p>
     <button class="start-btn" :disabled="isStarting" @click="startExperiment">
       {{ isStarting ? 'Starting...' : 'Start Experiment' }}
     </button>
@@ -46,7 +47,14 @@ async function startExperiment() {
   font-weight: 600;
   cursor: pointer;
 }
-
+.paragraphStart {
+  margin: top -20rem;
+  max-width: 400px;
+  text-align: center;
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: -32rem;
+}
 .start-btn:disabled {
   background: #b7b7b7;
   cursor: not-allowed;
