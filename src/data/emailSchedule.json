@@ -159,9 +159,10 @@
 
   "outro": {
       "id": "outro-1",
-            "from": "Humanresources@adm.com",
-            "subject": "re: Welcome and account verification",
-            "body": "<div style=\"margin:1rem 0; border:1px solid #cfe9fb; border-radius:16px; overflow:hidden; background:#f7fcff; color:#0f2847; font-family:Segoe UI, Arial, sans-serif; line-height:1.6;\"><div style=\"background:linear-gradient(90deg,#0050B7 0%,#4AAAEF 100%); color:#ffffff; padding:12px 16px; font-size:14px; font-weight:700; letter-spacing:.3px;\">Final Confirmation </div><div style=\"padding:16px;\"><p style=\"margin:0 0 12px;\">Hi Taylor,</p><p style=\"margin:0 0 12px;\">We got confirmation that you've activated all the accounts for now. Good job.</p><p style=\"margin:0 0 14px;\">The last thing you have to do is click the link below and download the file that records your activity for today.</p><p style=\"margin:0 0 16px;\"><a href=\"http://admportal.finish.com.local\" target=\"_blank\" style=\"display:inline-block; padding:10px 14px; border-radius:999px; background:#DB2063; color:#ffffff; text-decoration:none; font-weight:700;\">Open Final Portal</a></p><p style=\"margin:14px 0 0; text-align:right; color:#4f6b86;\">Thank you for your work.</p></div></div>",
+            "from": "The experiment team",
+             "accountVerified": true,
+            "subject": "Experiment finished - final questions",
+            "body": "<div style=\"margin:1rem 0; border:1px solid #d8d1c5; border-radius:12px; overflow:hidden; background:#fffdf8; color:#2a241c; font-family:Arial, serif; line-height:1.65; box-shadow:0 8px 24px rgba(42,36,28,0.08);\"><div style=\"padding:14px 18px; background:#f4efe5; border-bottom:1px solid #e2dacb;\"><h2 style=\"margin:6px 0 0; font-size:20px; line-height:1.2; color:#2f261a; font-weight:700;\">Experiment Finished</h2></div><div style=\"padding:18px;\"><p style=\"margin:0 0 12px;\">Hi,</p><p style=\"margin:0 0 12px;\">You have reached the end of the experiment. Thank you for your participation.</p><p style=\"margin:0 0 16px;\">Please open the link below to complete the final questionnaire.</p><p style=\"margin:0 0 16px;\"><a href=\"http://localhost:5173/#/usability\" style=\"display:inline-block; padding:10px 16px; border-radius:6px; background:#2f261a; color:#fffaf1; text-decoration:none; font-weight:700; font-family:Segoe UI, Arial, sans-serif;\">Go to Final Questions</a></p>",
             "linkedCredentialKey": "outro-1",
             "delaySeconds": 50,
             "taskId": "task-outro-1",

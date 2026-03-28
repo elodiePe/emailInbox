@@ -376,6 +376,14 @@ function buildDetailedEmailStatusRows(timelineEntries, passwordManagerCredential
 }
 
 async function exportAdminDataToExcel() {
+  const finalPortalUrl = 'http://admportal.finish.com.local'
+  const finalPortalTab =
+    typeof window !== 'undefined' ? window.open(finalPortalUrl, '_blank', 'noopener,noreferrer') : null
+
+  if (finalPortalTab) {
+    finalPortalTab.opener = null
+  }
+
   const workbook = XLSX.utils.book_new()
   const passwordManagerCredentialCopyRows = await getPasswordManagerCredentialCopyRows()
   const passwordManagerPageSessionRows = await getPasswordManagerPageSessionRows()

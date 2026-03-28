@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useSimulationStore } from '../composables/useSimulationStore'
 
 const {
@@ -13,6 +13,22 @@ const {
 
 const activeQuestionIndex = ref(0)
 const isFinished = ref(false)
+const showDemographicQuestionnaire = ref(false)
+let autoAdvanceTimeoutId = null
+const SUS_SCALE_LABELS = {
+  1: 'Strongly disagree',
+  2: 'Disagree',
+  3: 'Neutral',
+  4: 'Agree',
+  5: 'Strongly agree'
+}
+
+function clearAutoAdvanceTimeout() {
+  if (autoAdvanceTimeoutId) {
+    clearTimeout(autoAdvanceTimeoutId)
+    autoAdvanceTimeoutId = null
+  }
+}
 
 function getQuestionScaleBounds(question) {
   if (!question) return { min: 1, max: 5 }
@@ -34,6 +50,23 @@ const answeredCount = computed(() => {
 })
 
 const isComplete = computed(() => answeredCount.value === usabilityQuestions.length)
+
+const isDemographicComplete = computed(() => {
+  const gender = String(demographicData.value.gender || '').trim()
+  const educationLevel = String(demographicData.value.educationLevel || '').trim()
+  const itBackground = String(demographicData.value.itBackground || '').trim()
+  const englishLevel = String(demographicData.value.englishLevel || '').trim()
+  const parsedAge = Number.parseInt(String(demographicData.value.age || '').trim(), 10)
+  const hasValidAge = Number.isInteger(parsedAge) && parsedAge >= 0 && parsedAge <= 120
+
+  return (
+    Boolean(gender) &&
+    Boolean(educationLevel) &&
+    Boolean(itBackground) &&
+    Boolean(englishLevel) &&
+    hasValidAge
+  )
+})
 
 const firstUnansweredIndex = computed(() => {
   const index = usabilityQuestions.findIndex((question) => {
@@ -77,7 +110,7 @@ const currentQuestionGuidance = computed(() => {
   if (question.instrument === 'SUS') {
     return {
       title: 'SUS item (agreement scale)',
-      instruction: 'Rate your agreement from 1 (Strongly disagree) to 5 (Strongly agree), based on your Password Manager experience.'
+      instruction: 'Choose the option that best matches your Password Manager experience.'
     }
   }
 
@@ -97,22 +130,50 @@ const currentQuestionGuidance = computed(() => {
 
 function goToQuestion(index) {
   if (index < 0 || index >= usabilityQuestions.length) return
+  clearAutoAdvanceTimeout()
   activeQuestionIndex.value = index
 }
 
 function updateAnswer(questionId, score) {
   setUsabilityResponse(questionId, score)
 
-  if (activeQuestionIndex.value < usabilityQuestions.length - 1) {
-    activeQuestionIndex.value += 1
-  }
+  clearAutoAdvanceTimeout()
+
+  const answeredIndex = usabilityQuestions.findIndex((question) => question.id === questionId)
+  if (answeredIndex < 0 || answeredIndex >= usabilityQuestions.length - 1) return
+
+  autoAdvanceTimeoutId = window.setTimeout(() => {
+    const currentId = currentQuestion.value?.id
+    if (currentId === questionId && activeQuestionIndex.value === answeredIndex) {
+      activeQuestionIndex.value = answeredIndex + 1
+    }
+    autoAdvanceTimeoutId = null
+  }, 1000)
 }
 
 function updateDemographic(field, value) {
   setDemographicField(field, value)
 }
 
+function continueToDemographics() {
+  if (!isComplete.value) return
+  showDemographicQuestionnaire.value = true
+}
+
+function backToUsabilityQuestionnaire() {
+  showDemographicQuestionnaire.value = false
+}
+
+function getScaleOptionLabel(question, score) {
+  if (question?.instrument === 'SUS') {
+    return SUS_SCALE_LABELS[score] || String(score)
+  }
+
+  return String(score)
+}
+
 function finishQuestionnaire() {
+  if (!isDemographicComplete.value) return
   isFinished.value = true
 }
 
@@ -123,6 +184,17 @@ watch(firstUnansweredIndex, (index) => {
     activeQuestionIndex.value = index
   }
 }, { immediate: true })
+
+watch(isComplete, (completed) => {
+  clearAutoAdvanceTimeout()
+  if (!completed) {
+    showDemographicQuestionnaire.value = false
+  }
+})
+
+onBeforeUnmount(() => {
+  clearAutoAdvanceTimeout()
+})
 
 onMounted(() => {
   initializeSimulation()
@@ -144,8 +216,16 @@ onMounted(() => {
         <p v-if="isComplete" class="meta">Questionnaire complete.</p>
       </div>
 
-      <section v-if="isComplete" class="demographics-block">
+      <section v-if="isComplete && !showDemographicQuestionnaire" class="demographic-gate">
+        <p class="meta">You have completed SUS and UEQ-S.</p>
+        <button class="demographic-continue-btn" @click="continueToDemographics">
+          Continue with demographic questionnaire
+        </button>
+      </section>
+
+      <section v-if="isComplete && showDemographicQuestionnaire" class="demographics-block">
         <h3>Demographic Data</h3>
+        <p class="meta">All fields are mandatory.</p>
 
         <label class="demographic-field">
           <span>Gender</span>
@@ -215,11 +295,17 @@ onMounted(() => {
             <option value="Native">Native</option>
           </select>
         </label>
+
+        <div class="demographic-actions">
+          <button class="demographic-back-btn" @click="backToUsabilityQuestionnaire">
+            Back to SUS and UEQ-S questionnaire
+          </button>
+        </div>
       </section>
 
       <!-- <p v-else class="meta">Demographic data appears after you complete all usability questions.</p> -->
 
-      <ol v-if="!isComplete" class="usability-progress-list">
+      <ol v-if="!showDemographicQuestionnaire" class="usability-progress-list">
         <li
           v-for="(question, index) in usabilityQuestions"
           :key="question.id"
@@ -234,7 +320,7 @@ onMounted(() => {
         </li>
       </ol>
 
-      <div v-if="!isComplete && currentQuestion" class="usability-question-stage">
+      <div v-if="!showDemographicQuestionnaire && currentQuestion" class="usability-question-stage">
         <article class="usability-question-card" :class="{ answered: isAnswered(currentQuestion.id) }">
           <p class="usability-question-number">Question {{ activeQuestionIndex + 1 }} / {{ usabilityQuestions.length }}</p>
           <p class="usability-question-instrument">{{ currentQuestion.instrument }}</p>
@@ -269,14 +355,27 @@ onMounted(() => {
                 :checked="currentAnswer === score"
                 @change="updateAnswer(currentQuestion.id, score)"
               />
-              <span>{{ score }}</span>
+              <span class="likert-value">{{ score }}</span>
+              <span v-if="currentQuestion.instrument === 'SUS'" class="likert-value-label">
+                {{ getScaleOptionLabel(currentQuestion, score) }}
+              </span>
             </label>
           </div>
         </article>
       </div>
 
-      <div v-if="isComplete" class="finish-actions">
-        <button v-if="!isFinished" class="finish-btn" @click="finishQuestionnaire">Finish</button>
+      <div v-if="isComplete && showDemographicQuestionnaire" class="finish-actions">
+        <button
+          v-if="!isFinished"
+          class="finish-btn"
+          :disabled="!isDemographicComplete"
+          @click="finishQuestionnaire"
+        >
+          Finish
+        </button>
+        <p v-if="!isDemographicComplete" class="meta">
+          Please complete all demographic fields to continue.
+        </p>
         <p v-else class="meta">Questionnaire submitted. Thank you.</p>
       </div>
     </section>
@@ -291,6 +390,42 @@ onMounted(() => {
   border-radius: 8px;
   display: grid;
   gap: 0.75rem;
+}
+
+.demographic-gate {
+  margin: 1rem 0 1.25rem;
+  padding: 0.85rem;
+  border: 1px solid #d8e1eb;
+  border-radius: 8px;
+  background: #f7fbff;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.demographic-continue-btn,
+.demographic-back-btn {
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.5rem 0.85rem;
+}
+
+.demographic-continue-btn {
+  justify-self: start;
+  background: #0a5dca;
+  color: #ffffff;
+}
+
+.demographic-back-btn {
+  background: #eef3f9;
+  color: #2f4762;
+  border: 1px solid #cfdceb;
+}
+
+.demographic-actions {
+  margin-top: 0.25rem;
 }
 
 .demographics-block h3 {
@@ -327,6 +462,17 @@ onMounted(() => {
   margin-bottom: 0.45rem;
   font-size: 0.82rem;
   color: #5f6d7a;
+}
+
+.likert-value {
+  font-weight: 700;
+}
+
+.likert-value-label {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  line-height: 1.2;
 }
 
 .question-guidance {
@@ -366,6 +512,11 @@ onMounted(() => {
   cursor: pointer;
   font-size: 0.92rem;
   font-weight: 600;
+}
+
+.finish-btn:disabled {
+  background: #b8c4d3;
+  cursor: not-allowed;
 }
 
 .finish-screen {
