@@ -31,18 +31,22 @@ async function signOut() {
   const shouldSignOut = window.confirm('Are you sure you want to sign out?')
   if (!shouldSignOut) return
 
-  try {
-    await exportSimulationDataToExcel({
-      currentSessionId: currentSessionId.value,
-      timelineEntries: timelineEntries.value,
-      orderedGroups: orderedGroups.value,
-      usabilityQuestions,
-      usabilityResponses: usabilityResponses.value,
-      demographicData: demographicData.value,
-      exportFileName: 'simulation-export'
-    })
-  } catch {
-    // Keep sign-out resilient even if export fails.
+  const shouldExport = window.confirm('Do you want to export the Excel sheet before signing out?')
+
+  if (shouldExport) {
+    try {
+      await exportSimulationDataToExcel({
+        currentSessionId: currentSessionId.value,
+        timelineEntries: timelineEntries.value,
+        orderedGroups: orderedGroups.value,
+        usabilityQuestions,
+        usabilityResponses: usabilityResponses.value,
+        demographicData: demographicData.value,
+        exportFileName: 'simulation-export'
+      })
+    } catch {
+      // Keep sign-out resilient even if export fails.
+    }
   }
 
   logout()
