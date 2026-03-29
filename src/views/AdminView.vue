@@ -513,24 +513,34 @@ async function exportAdminDataToExcel() {
     }
   })
 
-  const challengeDetailRows = timelineEntries.value.flatMap((item, index) => {
-    const stats = emailCredentialDataMap[item.id]
-    const matchedEvents = stats?.matchedEvents || []
+  const emailByCredentialKey = new Map()
+  timelineEntries.value.forEach((item, index) => {
+    const key = getEmailCredentialKey(item)
+    if (key && !emailByCredentialKey.has(key)) {
+      emailByCredentialKey.set(key, { item, order: index + 1 })
+    }
+  })
 
-    return matchedEvents
-      .filter((row) => row.managerMode === 'B' && row.challengeType && row.challengeType !== 'N/A')
-      .map((row) => ({
-        Email_order: index + 1,
-        Group: item.groupLabel || 'N/A',
-        Email_ID: item.id,
-        PM_task_id: stats?.credentialLinkKey || getEmailCredentialKey(item) || 'N/A',
+  const challengeDetailRows = passwordManagerCredentialCopyRows
+    .filter((row) => {
+      const challengeType = String(row.challengeType || '').trim()
+      return challengeType !== '' && challengeType.toUpperCase() !== 'N/A'
+    })
+    .map((row) => {
+      const matched = emailByCredentialKey.get(getEventCredentialKey(row))
+      return {
+        Email_order: matched?.order ?? 'N/A',
+        Group: matched?.item?.groupLabel || 'N/A',
+        Email_ID: matched?.item?.id || 'N/A',
+        PM_task_id: row.credentialLinkKey || matched?.item?.linkedCredentialKey || 'N/A',
+        PM_mode: row.managerMode || 'unknown',
         Challenge_type: row.challengeType,
         Challenge_attempts: typeof row.challengeAttempts === 'number' ? row.challengeAttempts : 'N/A',
         Challenge_outcome: row.outcome || 'N/A',
         Challenge_time:
           typeof row.challengeDurationSeconds === 'number' ? row.challengeDurationSeconds : 'N/A'
-      }))
-  })
+      }
+    })
 
   const usabilitySheet = XLSX.utils.json_to_sheet(usabilityRows)
   const demographicSectionSheet = XLSX.utils.json_to_sheet(demographicSectionRows)
