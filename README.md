@@ -8,8 +8,8 @@ npm run dev
 ```
 
 # login information
-use the password manager log in ;)
+use the password manager to login ;)
 
 # admin section
-to go \admin
+go to \admin
 To connect with the mailbox use the same session identification
