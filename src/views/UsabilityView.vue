@@ -54,6 +54,7 @@ const isComplete = computed(() => answeredCount.value === usabilityQuestions.len
 const isDemographicComplete = computed(() => {
   const gender = String(demographicData.value.gender || '').trim()
   const educationLevel = String(demographicData.value.educationLevel || '').trim()
+  const studyName = String(demographicData.value.studyName || '').trim()
   const itBackground = String(demographicData.value.itBackground || '').trim()
   const englishLevel = String(demographicData.value.englishLevel || '').trim()
   const parsedAge = Number.parseInt(String(demographicData.value.age || '').trim(), 10)
@@ -62,6 +63,7 @@ const isDemographicComplete = computed(() => {
   return (
     Boolean(gender) &&
     Boolean(educationLevel) &&
+    Boolean(studyName) &&
     Boolean(itBackground) &&
     Boolean(englishLevel) &&
     hasValidAge
@@ -268,16 +270,27 @@ onMounted(() => {
         </label>
 
         <label class="demographic-field">
+          <span>Study Name</span>
+          <input
+            type="text"
+            maxlength="120"
+            placeholder="Enter study name"
+            :value="demographicData.studyName"
+            @input="updateDemographic('studyName', $event.target.value)"
+          />
+        </label>
+
+        <label class="demographic-field">
           <span>IT Background</span>
           <select
             :value="demographicData.itBackground"
             @change="updateDemographic('itBackground', $event.target.value)"
           >
             <option value="">Select</option>
-            <option value="None">None</option>
-            <option value="Basic User">Basic User</option>
-            <option value="Student">Student</option>
-            <option value="Professional">Professional</option>
+            <option value="No IT experience">No IT experience</option>
+            <option value="Basic computer use">Basic computer use</option>
+            <option value="Intermediate digital skills">Intermediate digital skills</option>
+            <option value="Advanced digital skills">Advanced digital skills</option>
             <option value="Other">Other</option>
           </select>
         </label>
@@ -289,9 +302,9 @@ onMounted(() => {
             @change="updateDemographic('englishLevel', $event.target.value)"
           >
             <option value="">Select</option>
-            <option value="Beginner">Beginner</option>
-            <option value="Intermediate">Intermediate</option>
-            <option value="Advanced">Advanced</option>
+            <option value="Beginner">B1</option>
+            <option value="Intermediate">B2</option>
+            <option value="Advanced">C1</option>
             <option value="Native">Native</option>
           </select>
         </label>

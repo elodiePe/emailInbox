@@ -20,6 +20,7 @@ const demographicData = ref({
   gender: '',
   age: '',
   educationLevel: '',
+  studyName: '',
   itBackground: '',
   englishLevel: ''
 })
@@ -70,14 +71,14 @@ const usabilityQuestions = [
   {
     id: 'sus7',
     instrument: 'SUS',
-    text: 'I would imagine that most people would learn to use this system very quickly.',
+    text: 'I imagine that most people would learn to use this system very quickly.',
     minScale: 1,
     maxScale: 5
   },
   {
     id: 'sus8',
     instrument: 'SUS',
-    text: 'I found the system very cumbersome to use.',
+    text: 'I found the system very awkward to use.',
     minScale: 1,
     maxScale: 5
   },
@@ -101,8 +102,8 @@ const usabilityQuestions = [
     text: 'Obstructive / Supportive',
     leftLabel: 'Obstructive',
     rightLabel: 'Supportive',
-    minScale: 1,
-    maxScale: 7
+    minScale: -3,
+    maxScale: 3
   },
   {
     id: 'ueqs2',
@@ -110,8 +111,8 @@ const usabilityQuestions = [
     text: 'Complicated / Easy',
     leftLabel: 'Complicated',
     rightLabel: 'Easy',
-    minScale: 1,
-    maxScale: 7
+    minScale: -3,
+    maxScale: 3
   },
   {
     id: 'ueqs3',
@@ -119,8 +120,8 @@ const usabilityQuestions = [
     text: 'Inefficient / Efficient',
     leftLabel: 'Inefficient',
     rightLabel: 'Efficient',
-    minScale: 1,
-    maxScale: 7
+    minScale: -3,
+    maxScale: 3
   },
   {
     id: 'ueqs4',
@@ -128,8 +129,8 @@ const usabilityQuestions = [
     text: 'Confusing / Clear',
     leftLabel: 'Confusing',
     rightLabel: 'Clear',
-    minScale: 1,
-    maxScale: 7
+    minScale: -3,
+    maxScale: 3
   },
   {
     id: 'ueqs5',
@@ -137,8 +138,8 @@ const usabilityQuestions = [
     text: 'Boring / Exciting',
     leftLabel: 'Boring',
     rightLabel: 'Exciting',
-    minScale: 1,
-    maxScale: 7
+    minScale: -3,
+    maxScale: 3
   },
   {
     id: 'ueqs6',
@@ -146,8 +147,8 @@ const usabilityQuestions = [
     text: 'Not Interesting / Interesting',
     leftLabel: 'Not Interesting',
     rightLabel: 'Interesting',
-    minScale: 1,
-    maxScale: 7
+    minScale: -3,
+    maxScale: 3
   },
   {
     id: 'ueqs7',
@@ -155,8 +156,8 @@ const usabilityQuestions = [
     text: 'Conventional / Inventive',
     leftLabel: 'Conventional',
     rightLabel: 'Inventive',
-    minScale: 1,
-    maxScale: 7
+    minScale: -3,
+    maxScale: 3
   },
   {
     id: 'ueqs8',
@@ -164,8 +165,8 @@ const usabilityQuestions = [
     text: 'Usual / Leading Edge',
     leftLabel: 'Usual',
     rightLabel: 'Leading Edge',
-    minScale: 1,
-    maxScale: 7
+    minScale: -3,
+    maxScale: 3
   }
 ]
 
@@ -354,6 +355,7 @@ function normalizeDemographicData(value) {
     gender: '',
     age: '',
     educationLevel: '',
+    studyName: '',
     itBackground: '',
     englishLevel: ''
   }
@@ -363,18 +365,35 @@ function normalizeDemographicData(value) {
   const allowedGenders = new Set(['Male', 'Female', 'Other'])
   const allowedEnglishLevels = new Set(['Beginner', 'Intermediate', 'Advanced', 'Native'])
   const allowedEducationLevels = new Set(['High School', 'Bachelor', 'Master', 'PhD', 'Other'])
-  const allowedItBackgrounds = new Set(['None', 'Basic User', 'Student', 'Professional', 'Other'])
+  const allowedItBackgrounds = new Set([
+    'No IT experience',
+    'Basic computer use',
+    'Intermediate digital skills',
+    'Advanced digital skills',
+    'IT/Computer Science student',
+    'IT professional',
+    'Other'
+  ])
+  const legacyItBackgroundMap = {
+    None: 'No IT experience',
+    'Basic User': 'Basic computer use',
+    Student: 'IT/Computer Science student',
+    Professional: 'IT professional'
+  }
 
   const normalizedGender = String(value.gender || '').trim()
   const normalizedAge = String(value.age || '').trim().replace(/[^0-9]/g, '')
   const normalizedEducationLevel = String(value.educationLevel || '').trim()
-  const normalizedItBackground = String(value.itBackground || '').trim()
+  const normalizedStudyName = String(value.studyName || '').trim().slice(0, 120)
+  const normalizedItBackgroundRaw = String(value.itBackground || '').trim()
+  const normalizedItBackground = legacyItBackgroundMap[normalizedItBackgroundRaw] || normalizedItBackgroundRaw
   const normalizedEnglishLevel = String(value.englishLevel || '').trim()
 
   return {
     gender: allowedGenders.has(normalizedGender) ? normalizedGender : '',
     age: normalizedAge,
     educationLevel: allowedEducationLevels.has(normalizedEducationLevel) ? normalizedEducationLevel : '',
+    studyName: normalizedStudyName,
     itBackground: allowedItBackgrounds.has(normalizedItBackground) ? normalizedItBackground : '',
     englishLevel: allowedEnglishLevels.has(normalizedEnglishLevel) ? normalizedEnglishLevel : ''
   }
@@ -670,6 +689,7 @@ function resetInMemoryState() {
     gender: '',
     age: '',
     educationLevel: '',
+    studyName: '',
     itBackground: '',
     englishLevel: ''
   }
@@ -755,6 +775,7 @@ async function restartSimulation() {
     gender: '',
     age: '',
     educationLevel: '',
+    studyName: '',
     itBackground: '',
     englishLevel: ''
   }
@@ -788,7 +809,7 @@ function setUsabilityResponse(questionId, score) {
 }
 
 function setDemographicField(field, value) {
-  const allowedFields = new Set(['gender', 'age', 'educationLevel', 'itBackground', 'englishLevel'])
+  const allowedFields = new Set(['gender', 'age', 'educationLevel', 'studyName', 'itBackground', 'englishLevel'])
   if (!allowedFields.has(field)) return
 
   let normalizedValue = String(value ?? '').trim()
@@ -813,8 +834,27 @@ function setDemographicField(field, value) {
   }
 
   if (field === 'itBackground') {
-    const allowedItBackgrounds = new Set(['None', 'Basic User', 'Student', 'Professional', 'Other'])
+    const allowedItBackgrounds = new Set([
+      'No IT experience',
+      'Basic computer use',
+      'Intermediate digital skills',
+      'Advanced digital skills',
+      'IT/Computer Science student',
+      'IT professional',
+      'Other'
+    ])
+    const legacyItBackgroundMap = {
+      None: 'No IT experience',
+      'Basic User': 'Basic computer use',
+      Student: 'IT/Computer Science student',
+      Professional: 'IT professional'
+    }
+    normalizedValue = legacyItBackgroundMap[normalizedValue] || normalizedValue
     if (!allowedItBackgrounds.has(normalizedValue)) normalizedValue = ''
+  }
+
+  if (field === 'studyName') {
+    normalizedValue = normalizedValue.slice(0, 120)
   }
 
   demographicData.value = {

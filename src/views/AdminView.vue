@@ -467,6 +467,7 @@ async function exportAdminDataToExcel() {
       Participant_gender: demographicData.value.gender || 'N/A',
       Participant_age: demographicData.value.age || 'N/A',
       Participant_levelOfEducation: demographicData.value.educationLevel || 'N/A',
+      Participant_studyName: demographicData.value.studyName || 'N/A',
       Participant_englishLevel: demographicData.value.englishLevel || 'N/A',
       Participant_ITLevel: demographicData.value.itBackground || 'N/A',
       Participant_PMGroup: participantPmGroup,

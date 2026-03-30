@@ -342,6 +342,7 @@ async function exportSimulationDataToExcel({
       Participant_gender: demographicData.gender || 'N/A',
       Participant_age: demographicData.age || 'N/A',
       Participant_levelOfEducation: demographicData.educationLevel || 'N/A',
+      Participant_studyName: demographicData.studyName || 'N/A',
       Participant_englishLevel: demographicData.englishLevel || 'N/A',
       Participant_ITLevel: demographicData.itBackground || 'N/A',
       Participant_PMGroup: participantPmGroup,
